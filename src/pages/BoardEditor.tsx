@@ -17,7 +17,7 @@ import { Modal } from '@/modules/ui/Modal';
 import { SmoothScroller } from '@/components/SmoothScroller';
 import { processImageFile } from '@/modules/assets/imageUpload';
 import { extractColors } from '@/modules/assets/colorExtraction';
-import { fetchLinkPreview, isPinterestUrl, extractPinterestImage, isPinterestBoard, extractPinterestBoardImages } from '@/modules/links/linkPreview';
+import { fetchLinkPreview, isPinterestUrl, isPinterestBoard } from '@/modules/links/linkPreview';
 import { BoardItem, Section } from '@/types';
 import { ImageSearchResult } from '@/modules/images/providers/base';
 import { LibraryAsset } from '@/modules/library/types';
@@ -172,117 +172,94 @@ export function BoardEditor({ boardId, onBack, onShare }: BoardEditorProps) {
     
     setLinkLoading(true);
     try {
-      // Check if it's a Pinterest Board (collection of pins)
-      if (isPinterestBoard(linkUrl)) {
-        console.log('Detected Pinterest Board, extracting all images...');
-        const imageUrls = await extractPinterestBoardImages(linkUrl);
-        
-        if (imageUrls.length > 0) {
-          let successCount = 0;
-          let failCount = 0;
+      // Check if it's a direct Pinterest image URL (i.pinimg.com)
+      if (linkUrl.includes('pinimg.com')) {
+        try {
+          // Directly load the Pinterest image
+          const response = await fetch(linkUrl);
+          const blob = await response.blob();
+          const dataUrl = await new Promise<string>((resolve) => {
+            const reader = new FileReader();
+            reader.onloadend = () => resolve(reader.result as string);
+            reader.readAsDataURL(blob);
+          });
           
-          // Process images in batches to avoid overwhelming the system
-          const batchSize = 3;
-          for (let i = 0; i < imageUrls.length; i += batchSize) {
-            const batch = imageUrls.slice(i, i + batchSize);
-            
-            await Promise.all(
-              batch.map(async (imageUrl) => {
-                try {
-                  // Use image proxy to avoid CORS issues
-                  const proxyUrl = `/api/image-proxy?url=${encodeURIComponent(imageUrl)}`;
-                  const response = await fetch(proxyUrl);
-                  const blob = await response.blob();
-                  const dataUrl = await new Promise<string>((resolve) => {
-                    const reader = new FileReader();
-                    reader.onloadend = () => resolve(reader.result as string);
-                    reader.readAsDataURL(blob);
-                  });
-                  
-                  // Extract colors from the image
-                  const palette = await extractColors(dataUrl);
-                  
-                  // Add as image item
-                  await addItem(boardId, {
-                    type: 'image',
-                    src: dataUrl,
-                    palette,
-                    section: currentSection.id,
-                    meta: {
-                      label: 'Pinterest Board',
-                      description: linkUrl,
-                    },
-                  });
-                  
-                  successCount++;
-                } catch (error) {
-                  console.error('Error processing board image:', error);
-                  failCount++;
-                }
-              })
-            );
-          }
+          // Extract colors from the image
+          const palette = await extractColors(dataUrl);
+          
+          // Add as image item
+          await addItem(boardId, {
+            type: 'image',
+            src: dataUrl,
+            palette,
+            section: currentSection.id,
+            meta: {
+              label: 'Pinterest',
+              description: 'Direkte Bild-URL',
+            },
+          });
           
           setLinkUrl('');
           setIsLinkModalOpen(false);
-          alert(`Pinterest Board importiert!\n✅ ${successCount} Bilder erfolgreich hinzugefügt${failCount > 0 ? `\n⚠️ ${failCount} Bilder konnten nicht geladen werden` : ''}`);
           return;
-        } else {
-          alert('⚠️ Pinterest Board konnte nicht geladen werden.\n\nTipp: Versuche stattdessen einzelne Pins hinzuzufügen, die funktionieren zuverlässiger!');
+        } catch (error) {
+          console.error('Error loading Pinterest image:', error);
+          alert('❌ Fehler beim Laden des Bildes.\n\nStelle sicher, dass es eine gültige Bild-URL ist.');
           setLinkLoading(false);
           return;
         }
       }
       
+      // Check if it's a Pinterest Board (collection of pins)
+      if (isPinterestBoard(linkUrl)) {
+        alert(
+          '📌 Pinterest Board Import\n\n' +
+          'Pinterest Boards können leider nicht automatisch importiert werden.\n\n' +
+          'Alternative:\n' +
+          '1. Öffne das Board auf Pinterest\n' +
+          '2. Klicke auf einzelne Bilder\n' +
+          '3. Kopiere die direkte Bild-URL (Rechtsklick → Bild in neuem Tab öffnen)\n' +
+          '4. Füge jede Bild-URL hier ein\n\n' +
+          '💡 Tipp: Direkte i.pinimg.com URLs funktionieren perfekt!'
+        );
+        setLinkLoading(false);
+        return;
+      }
+      
       // Special handling for single Pinterest Pin URLs
       if (isPinterestUrl(linkUrl)) {
-        const imageUrl = await extractPinterestImage(linkUrl);
+        // Show helpful instructions for Pinterest images
+        const useDirectImage = confirm(
+          '📌 Pinterest-Bilder hinzufügen\n\n' +
+          'Um Pinterest-Bilder direkt als Vorschau anzuzeigen:\n\n' +
+          '1. Öffne den Pinterest-Pin in einem neuen Tab\n' +
+          '2. Rechtsklick auf das Bild → "Bild in neuem Tab öffnen"\n' +
+          '3. Kopiere die Bild-URL (beginnt mit i.pinimg.com)\n' +
+          '4. Füge diese direkte Bild-URL hier ein\n\n' +
+          '❓ Möchtest du die Anleitung nochmal sehen?\n\n' +
+          'Klicke "OK" für mehr Details oder "Abbrechen" um fortzufahren.'
+        );
         
-        if (imageUrl) {
-          try {
-            // Use image proxy to avoid CORS issues
-            const proxyUrl = `/api/image-proxy?url=${encodeURIComponent(imageUrl)}`;
-            const response = await fetch(proxyUrl);
-            
-            if (!response.ok) {
-              throw new Error(`Failed to fetch image: ${response.status}`);
-            }
-            
-            const blob = await response.blob();
-            const dataUrl = await new Promise<string>((resolve) => {
-              const reader = new FileReader();
-              reader.onloadend = () => resolve(reader.result as string);
-              reader.readAsDataURL(blob);
-            });
-            
-            // Extract colors from the image
-            const palette = await extractColors(dataUrl);
-            
-            // Add as image item with data URL (for offline use)
-            await addItem(boardId, {
-              type: 'image',
-              src: dataUrl,
-              palette,
-              section: currentSection.id,
-              meta: {
-                label: 'Pinterest',
-                description: linkUrl,
-              },
-            });
-            
-            setLinkUrl('');
-            setIsLinkModalOpen(false);
-            return;
-          } catch (error) {
-            console.error('Error processing Pinterest image:', error);
-            alert('❌ Fehler beim Laden des Pinterest-Bildes.\n\nBitte versuche es erneut oder verwende einen anderen Link.');
-            setLinkLoading(false);
-            return;
-          }
-        } else {
-          // If image extraction fails, fall back to regular link handling
-          console.warn('Could not extract Pinterest image, adding as link');
+        if (useDirectImage) {
+          // Show detailed instructions
+          alert(
+            '📌 Detaillierte Anleitung:\n\n' +
+            '1. Öffne deinen Pinterest-Link im Browser:\n' +
+            '   ' + linkUrl + '\n\n' +
+            '2. Warte bis die Seite geladen ist\n\n' +
+            '3. Rechtsklick auf das große Bild\n\n' +
+            '4. Wähle "Bild in neuem Tab öffnen" oder "Grafikadresse kopieren"\n\n' +
+            '5. Die URL sollte so aussehen:\n' +
+            '   https://i.pinimg.com/originals/...\n\n' +
+            '6. Kopiere diese URL und füge sie hier ein\n\n' +
+            '💡 Tipp: Die direkte Bild-URL funktioniert perfekt ohne Probleme!'
+          );
+          setLinkLoading(false);
+          return;
         }
+        
+        // If user wants to continue, add as link preview
+        console.warn('Adding Pinterest URL as link preview');
       }
       
       // Regular link handling for non-Pinterest URLs or failed Pinterest extraction

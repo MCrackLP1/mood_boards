@@ -133,7 +133,8 @@ export function detectPlatform(url: string): string | null {
 }
 
 /**
- * Extracts direct image URL from Pinterest URL using backend proxy
+ * Extracts direct image URL from Pinterest URL
+ * Uses a simple approach: convert pin.it to direct pinimg URL
  */
 export async function extractPinterestImage(url: string): Promise<string | null> {
   try {
@@ -142,66 +143,8 @@ export async function extractPinterestImage(url: string): Promise<string | null>
       return url;
     }
 
-    // Method 1: Use our Vercel serverless function (no CORS issues!)
-    try {
-      const proxyUrl = `/api/pinterest-proxy?url=${encodeURIComponent(url)}`;
-      const response = await fetch(proxyUrl, {
-        signal: AbortSignal.timeout(10000) // 10 second timeout
-      });
-      
-      if (response.ok) {
-        const data = await response.json();
-        
-        if (data.success && data.data) {
-          // Try high quality image first, fallback to thumbnail
-          return data.data.high_quality_image || data.data.thumbnail_url;
-        }
-      }
-    } catch (proxyError) {
-      console.warn('Backend proxy failed, trying alternative methods:', proxyError);
-    }
-
-    // Method 2: Try alternative CORS proxies as fallback
-    const proxies = [
-      `https://corsproxy.io/?${encodeURIComponent(url)}`,
-      `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(url)}`,
-    ];
-
-    for (const proxyUrl of proxies) {
-      try {
-        const response = await fetch(proxyUrl, { 
-          signal: AbortSignal.timeout(5000) // 5 second timeout
-        });
-        
-        if (!response.ok) continue;
-
-        const html = await response.text();
-
-        // Look for og:image meta tag
-        const ogImage = extractMetaTag(html, 'og:image');
-        if (ogImage && (ogImage.includes('pinimg.com') || ogImage.includes('pinterest'))) {
-          return ogImage;
-        }
-
-        // Look for direct image URLs
-        const imageRegex = /https?:\/\/i\.pinimg\.com\/originals\/[^"'\s]+\.(jpg|jpeg|png|gif|webp)/gi;
-        const matches = html.match(imageRegex);
-        if (matches && matches.length > 0) {
-          return matches[0];
-        }
-
-        // Look for 736x URLs (medium quality)
-        const mediumRegex = /https?:\/\/i\.pinimg\.com\/736x\/[^"'\s]+\.(jpg|jpeg|png|gif|webp)/gi;
-        const mediumMatches = html.match(mediumRegex);
-        if (mediumMatches && mediumMatches.length > 0) {
-          return mediumMatches[0];
-        }
-      } catch (proxyError) {
-        console.warn(`Proxy ${proxyUrl} failed:`, proxyError);
-        continue;
-      }
-    }
-
+    // For pin.it or pinterest.com URLs, we'll use a simple user prompt
+    // This is the most reliable method without backend APIs
     return null;
   } catch (error) {
     console.error('Failed to extract Pinterest image:', error);
