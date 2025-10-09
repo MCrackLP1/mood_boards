@@ -83,8 +83,16 @@ npm run dev
 2. Klicke auf **"🔍 Web-Suche"** im Upload-Bereich
 3. Gib einen Suchbegriff ein (z.B. "Wedding", "Portrait", "Sunset")
 4. Durchsuche die Ergebnisse aus allen Providern
-5. Klicke auf ein Bild zum Importieren
-6. Das Bild wird automatisch heruntergeladen und mit Farbpalette hinzugefügt
+
+**Einzelnes Bild hinzufügen:**
+5. Klicke auf ein Bild (nur einmal) → Es wird ausgewählt (✓)
+6. Klicke auf "1 Bild hinzufügen"
+7. Das Bild wird heruntergeladen und mit Farbpalette hinzugefügt
+
+**Mehrere Bilder auf einmal:**
+5. Klicke auf mehrere Bilder (✓ erscheint bei jedem)
+6. Klicke auf "X Bilder hinzufügen"
+7. Alle ausgewählten Bilder werden importiert 🎉
 
 ### Tipps für bessere Suchergebnisse:
 

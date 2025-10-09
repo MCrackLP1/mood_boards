@@ -2,6 +2,23 @@
 
 Alle wichtigen Änderungen an diesem Projekt werden in dieser Datei dokumentiert.
 
+## [1.3.0] - 2024-10-09
+
+### ✨ Neue Features
+
+#### Multi-Select für Bildsuche 🎯
+- **Mehrere Bilder auswählen**: Klicke auf mehrere Bilder (Toggle mit ✓)
+- **Batch-Import**: Alle ausgewählten Bilder mit einem Klick hinzufügen
+- **Visuelles Feedback**: Blaue Border + Checkmark bei ausgewählten Bildern
+- **Counter-Button**: "X Bilder hinzufügen" zeigt Anzahl an
+- **Auswahl aufheben**: Button zum Zurücksetzen der Selektion
+- **Performance**: Sequentieller Download verhindert Überlastung
+
+### 🎨 UX-Verbesserungen
+- Animierter Checkmark beim Auswählen (Pop-Animation)
+- Ausgewählte Bilder bleiben visuell hervorgehoben
+- Progress während Batch-Import ("Füge X Bilder hinzu...")
+
 ## [1.2.0] - 2024-10-09
 
 ### ✨ Neue Features
