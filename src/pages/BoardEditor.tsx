@@ -17,7 +17,7 @@ import { Modal } from '@/modules/ui/Modal';
 import { SmoothScroller } from '@/components/SmoothScroller';
 import { processImageFile } from '@/modules/assets/imageUpload';
 import { extractColors } from '@/modules/assets/colorExtraction';
-import { fetchLinkPreview, isPinterestUrl, extractPinterestImage } from '@/modules/links/linkPreview';
+import { fetchLinkPreview, isPinterestUrl, extractPinterestImage, isPinterestBoard, extractPinterestBoardImages } from '@/modules/links/linkPreview';
 import { BoardItem, Section } from '@/types';
 import { ImageSearchResult } from '@/modules/images/providers/base';
 import { LibraryAsset } from '@/modules/library/types';
@@ -172,7 +172,67 @@ export function BoardEditor({ boardId, onBack, onShare }: BoardEditorProps) {
     
     setLinkLoading(true);
     try {
-      // Special handling for Pinterest URLs - add as image instead of link
+      // Check if it's a Pinterest Board (collection of pins)
+      if (isPinterestBoard(linkUrl)) {
+        console.log('Detected Pinterest Board, extracting all images...');
+        const imageUrls = await extractPinterestBoardImages(linkUrl);
+        
+        if (imageUrls.length > 0) {
+          let successCount = 0;
+          let failCount = 0;
+          
+          // Process images in batches to avoid overwhelming the system
+          const batchSize = 5;
+          for (let i = 0; i < imageUrls.length; i += batchSize) {
+            const batch = imageUrls.slice(i, i + batchSize);
+            
+            await Promise.all(
+              batch.map(async (imageUrl) => {
+                try {
+                  // Use CORS proxy to fetch the image
+                  const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(imageUrl)}`;
+                  const response = await fetch(proxyUrl);
+                  const blob = await response.blob();
+                  const dataUrl = await new Promise<string>((resolve) => {
+                    const reader = new FileReader();
+                    reader.onloadend = () => resolve(reader.result as string);
+                    reader.readAsDataURL(blob);
+                  });
+                  
+                  // Extract colors from the image
+                  const palette = await extractColors(dataUrl);
+                  
+                  // Add as image item
+                  await addItem(boardId, {
+                    type: 'image',
+                    src: dataUrl,
+                    palette,
+                    section: currentSection.id,
+                    meta: {
+                      label: 'Pinterest Board',
+                      description: linkUrl,
+                    },
+                  });
+                  
+                  successCount++;
+                } catch (error) {
+                  console.error('Error processing board image:', error);
+                  failCount++;
+                }
+              })
+            );
+          }
+          
+          setLinkUrl('');
+          setIsLinkModalOpen(false);
+          alert(`Pinterest Board importiert!\n✅ ${successCount} Bilder erfolgreich hinzugefügt${failCount > 0 ? `\n⚠️ ${failCount} Bilder konnten nicht geladen werden` : ''}`);
+          return;
+        } else {
+          alert('Keine Bilder im Pinterest Board gefunden. Versuche es als einzelnen Pin...');
+        }
+      }
+      
+      // Special handling for single Pinterest Pin URLs
       if (isPinterestUrl(linkUrl)) {
         const imageUrl = await extractPinterestImage(linkUrl);
         

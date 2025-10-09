@@ -184,3 +184,73 @@ export function isPinterestUrl(url: string): boolean {
   return url.includes('pinterest.com') || url.includes('pinimg.com');
 }
 
+/**
+ * Check if URL is a Pinterest Board (collection of pins)
+ */
+export function isPinterestBoard(url: string): boolean {
+  // Pinterest board URLs look like: pinterest.com/username/boardname/
+  const boardPattern = /pinterest\.com\/[^/]+\/[^/]+\/?$/;
+  return boardPattern.test(url);
+}
+
+/**
+ * Extracts all image URLs from a Pinterest Board
+ */
+export async function extractPinterestBoardImages(url: string): Promise<string[]> {
+  try {
+    const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(url)}`;
+    const response = await fetch(proxyUrl);
+    
+    if (!response.ok) {
+      return [];
+    }
+
+    const data = await response.json();
+    const html = data.contents;
+
+    // Extract all Pinterest image URLs from the board page
+    const imageUrls: Set<string> = new Set();
+
+    // Method 1: Find all pinimg.com URLs in the HTML
+    const originalRegex = /https?:\/\/i\.pinimg\.com\/originals\/[^"'\s]+\.(jpg|jpeg|png|gif|webp)/gi;
+    const originalMatches = html.match(originalRegex);
+    if (originalMatches) {
+      originalMatches.forEach((url: string) => imageUrls.add(url));
+    }
+
+    // Method 2: Find 736x URLs (medium quality) if originals not found
+    if (imageUrls.size === 0) {
+      const mediumRegex = /https?:\/\/i\.pinimg\.com\/736x\/[^"'\s]+\.(jpg|jpeg|png|gif|webp)/gi;
+      const mediumMatches = html.match(mediumRegex);
+      if (mediumMatches) {
+        // Convert 736x URLs to originals URLs
+        mediumMatches.forEach((url: string) => {
+          const originalUrl = url.replace('/736x/', '/originals/');
+          imageUrls.add(originalUrl);
+        });
+      }
+    }
+
+    // Method 3: Look for 564x URLs (smaller quality) as fallback
+    if (imageUrls.size === 0) {
+      const smallRegex = /https?:\/\/i\.pinimg\.com\/564x\/[^"'\s]+\.(jpg|jpeg|png|gif|webp)/gi;
+      const smallMatches = html.match(smallRegex);
+      if (smallMatches) {
+        smallMatches.forEach((url: string) => {
+          const originalUrl = url.replace('/564x/', '/originals/');
+          imageUrls.add(originalUrl);
+        });
+      }
+    }
+
+    // Limit to reasonable number of images (max 50 to avoid overwhelming)
+    const uniqueUrls = Array.from(imageUrls).slice(0, 50);
+    
+    console.log(`Found ${uniqueUrls.length} images in Pinterest board`);
+    return uniqueUrls;
+  } catch (error) {
+    console.error('Failed to extract Pinterest board images:', error);
+    return [];
+  }
+}
+
