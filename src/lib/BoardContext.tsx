@@ -7,6 +7,7 @@ interface BoardContextType {
   boards: Board[];
   addBoard: (title: string) => void;
   deleteBoard: (id: string) => void;
+  duplicateBoard: (id: string) => void;
   getBoard: (id: string) => Board | undefined;
   updateBoard: (updatedBoard: Board) => void;
   isLoading: boolean;
@@ -68,6 +69,21 @@ export const BoardProvider = ({ children }: { children: ReactNode }) => {
     setBoards(prevBoards => prevBoards.filter(board => board.id !== id));
   };
 
+  const duplicateBoard = (id: string) => {
+    const boardToDuplicate = boards.find(board => board.id === id);
+    if (boardToDuplicate) {
+      const duplicatedBoard: Board = {
+        ...boardToDuplicate,
+        id: crypto.randomUUID(),
+        title: `${boardToDuplicate.title} (Kopie)`,
+        createdAt: new Date().toISOString(),
+        // Reset client-specific metadata
+        password: undefined,
+      };
+      setBoards(prevBoards => [...prevBoards, duplicatedBoard]);
+    }
+  };
+
   const getBoard = (id: string) => {
     return boards.find(board => board.id === id);
   };
@@ -78,7 +94,7 @@ export const BoardProvider = ({ children }: { children: ReactNode }) => {
     );
   };
 
-  const value = { boards, addBoard, deleteBoard, getBoard, updateBoard, isLoading, activeColor, setActiveColor };
+  const value = { boards, addBoard, deleteBoard, duplicateBoard, getBoard, updateBoard, isLoading, activeColor, setActiveColor };
 
   return (
     <BoardContext.Provider value={value}>

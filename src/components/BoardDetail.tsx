@@ -7,6 +7,7 @@ import { Board, ImageItem, NoteItem } from '@/types';
 import Masonry from 'react-masonry-css';
 import Image from 'next/image';
 import { Plus } from 'lucide-react';
+import { motion } from 'framer-motion';
 import Note from './Note';
 import ImageCard from './ImageCard';
 
@@ -67,11 +68,16 @@ export default function BoardDetail({ board }: BoardDetailProps) {
 
   return (
     <div>
-      <div className='flex gap-4 mb-8'>
+      <motion.div 
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+        className='flex gap-4 mb-8'
+      >
         <div
           {...getRootProps()}
           className={`flex-1 p-8 border-2 border-dashed rounded-lg text-center cursor-pointer transition-colors
-            ${isDragActive ? 'border-blue-500 bg-blue-50' : 'border-gray-300 bg-gray-50'}`}
+            ${isDragActive ? 'border-blue-500 bg-blue-50' : 'border-gray-300 bg-gray-50 hover:border-gray-400'}`}
         >
           <input {...getInputProps()} />
           {isDragActive ? (
@@ -87,19 +93,37 @@ export default function BoardDetail({ board }: BoardDetailProps) {
           <Plus className="text-gray-500 mb-2" />
           <span className="text-gray-500">Add Note</span>
         </button>
-      </div>
+      </motion.div>
 
       <Masonry
         breakpointCols={breakpointColumnsObj}
         className="my-masonry-grid"
         columnClassName="my-masonry-grid_column"
       >
-        {allItems.map(item => {
+        {allItems.map((item, index) => {
           if (item.type === 'image') {
-            return <ImageCard key={item.id} image={item} />
+            return (
+              <motion.div
+                key={item.id}
+                initial={{ opacity: 0, y: 30 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: index * 0.05 }}
+              >
+                <ImageCard image={item} />
+              </motion.div>
+            );
           }
           if (item.type === 'note') {
-            return <Note key={item.id} item={item} board={board} />
+            return (
+              <motion.div
+                key={item.id}
+                initial={{ opacity: 0, y: 30 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: index * 0.05 }}
+              >
+                <Note item={item} board={board} />
+              </motion.div>
+            );
           }
           return null;
         })}

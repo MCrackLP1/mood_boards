@@ -3,6 +3,12 @@ export interface Board {
   title: string;
   items: BoardItem[];
   createdAt: string;
+  // Client view metadata
+  clientName?: string;
+  welcomeMessage?: string;
+  password?: string;
+  ambientSound?: string;
+  showSignature?: boolean;
 }
 
 export type BoardItem = ImageItem | NoteItem | ColorPaletteItem;
