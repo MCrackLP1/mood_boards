@@ -18,7 +18,7 @@ import { SmoothScroller } from '@/components/SmoothScroller';
 import { processImageFile } from '@/modules/assets/imageUpload';
 import { extractColors } from '@/modules/assets/colorExtraction';
 import { fetchLinkPreview, isPinterestUrl, isPinterestBoard } from '@/modules/links/linkPreview';
-import { BoardItem, Section } from '@/types';
+import { BoardItem, Section, Color } from '@/types';
 import { ImageSearchResult } from '@/modules/images/providers/base';
 import { LibraryAsset } from '@/modules/library/types';
 import { DEFAULT_SECTIONS } from '@/types/sections';
@@ -175,27 +175,47 @@ export function BoardEditor({ boardId, onBack, onShare }: BoardEditorProps) {
       // Check if it's a direct Pinterest image URL (i.pinimg.com)
       if (linkUrl.includes('pinimg.com')) {
         try {
-          // Directly load the Pinterest image
-          const response = await fetch(linkUrl);
-          const blob = await response.blob();
-          const dataUrl = await new Promise<string>((resolve) => {
-            const reader = new FileReader();
-            reader.onloadend = () => resolve(reader.result as string);
-            reader.readAsDataURL(blob);
-          });
+          // Use the Pinterest image URL directly (no fetch needed - avoids CORS)
+          // Pinterest allows hotlinking via <img> tags
           
-          // Extract colors from the image
-          const palette = await extractColors(dataUrl);
+          // Try to extract colors by loading through a proxy image
+          let palette: Color[] = [];
+          try {
+            // Create a temporary image to extract colors
+            const img = new Image();
+            img.crossOrigin = 'anonymous';
+            
+            await new Promise((resolve, reject) => {
+              img.onload = resolve;
+              img.onerror = reject;
+              // Try with a CORS proxy for color extraction
+              img.src = `https://images.weserv.nl/?url=${encodeURIComponent(linkUrl)}`;
+              setTimeout(reject, 5000); // 5 second timeout
+            });
+            
+            // Create canvas to extract colors
+            const canvas = document.createElement('canvas');
+            canvas.width = img.width;
+            canvas.height = img.height;
+            const ctx = canvas.getContext('2d');
+            if (ctx) {
+              ctx.drawImage(img, 0, 0);
+              const dataUrl = canvas.toDataURL();
+              palette = await extractColors(dataUrl);
+            }
+          } catch (colorError) {
+            console.warn('Could not extract colors, using default palette:', colorError);
+          }
           
-          // Add as image item
+          // Add as image item with direct URL
           await addItem(boardId, {
             type: 'image',
-            src: dataUrl,
+            src: linkUrl, // Use direct URL instead of data URL
             palette,
             section: currentSection.id,
             meta: {
               label: 'Pinterest',
-              description: 'Direkte Bild-URL',
+              description: 'Von Pinterest',
             },
           });
           
@@ -203,8 +223,8 @@ export function BoardEditor({ boardId, onBack, onShare }: BoardEditorProps) {
           setIsLinkModalOpen(false);
           return;
         } catch (error) {
-          console.error('Error loading Pinterest image:', error);
-          alert('❌ Fehler beim Laden des Bildes.\n\nStelle sicher, dass es eine gültige Bild-URL ist.');
+          console.error('Error adding Pinterest image:', error);
+          alert('❌ Fehler beim Hinzufügen des Bildes.\n\nStelle sicher, dass es eine gültige Bild-URL ist.');
           setLinkLoading(false);
           return;
         }
