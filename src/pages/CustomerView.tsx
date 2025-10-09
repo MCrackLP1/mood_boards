@@ -212,8 +212,13 @@ export function CustomerView({ boardId }: CustomerViewProps) {
       
       <BrandingSignature visible={board.brandingEnabled} />
       
-      {isRevealed && (
-        <div className={styles.content}>
+      <motion.div 
+        className={styles.content}
+        initial={{ opacity: 0 }}
+        animate={{ opacity: isRevealed ? 1 : 0 }}
+        transition={{ duration: 0.8, delay: 0.4 }}
+        style={{ pointerEvents: isRevealed ? 'auto' : 'none' }}
+      >
         <header className={styles.header}>
           <h1 className={styles.title}>{board.title}</h1>
           
@@ -244,7 +249,12 @@ export function CustomerView({ boardId }: CustomerViewProps) {
           )}
         </header>
         
-        <div className={styles.canvas}>
+        <motion.div 
+          className={styles.canvas}
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8, delay: 0.6 }}
+        >
           {/* Hero Mood Zone - Shows ALL images or images from general */}
           <MoodHeroZone
             items={imageItems}
@@ -278,15 +288,14 @@ export function CustomerView({ boardId }: CustomerViewProps) {
 
           {/* Notes Zone */}
           <NotesZone items={getItemsBySection('notes')} />
-        </div>
+        </motion.div>
         
         {items.length === 0 && (
           <div className={styles.empty}>
             <p>Dieses Board ist noch leer.</p>
           </div>
         )}
-        </div>
-      )}
+      </motion.div>
       
       {lightboxItem && (
         <ImageLightbox

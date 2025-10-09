@@ -35,9 +35,10 @@ export function CanvasReveal({ items, onReveal }: CanvasRevealProps) {
   
   const handleReveal = () => {
     setScattered(false);
+    // Delay to allow exit animations to complete
     setTimeout(() => {
       onReveal();
-    }, 800);
+    }, 1200); // Increased for smoother transition
   };
   
   // Generate random positions for scattered state
@@ -105,8 +106,12 @@ export function CanvasReveal({ items, onReveal }: CanvasRevealProps) {
                     }}
                     exit={{
                       opacity: 0,
-                      scale: 0.8,
-                      transition: { duration: 0.4 }
+                      scale: 0.7,
+                      y: -100,
+                      transition: { 
+                        duration: 0.6,
+                        ease: [0.4, 0, 0.2, 1]
+                      }
                     }}
                     transition={{
                       delay: index * 0.05,
