@@ -13,23 +13,32 @@ interface LibraryStore {
   assets: LibraryAsset[];
   isLoading: boolean;
   
-  loadAssets: () => Promise<void>;
-  addAsset: (file: File) => Promise<LibraryAsset>;
+  loadAssets: (folderId?: string) => Promise<void>;
+  addAsset: (file: File, folderId?: string) => Promise<LibraryAsset>;
   deleteAsset: (id: string) => Promise<void>;
   getAsset: (id: string) => Promise<LibraryAsset | undefined>;
+  moveAsset: (assetId: string, targetFolderId: string) => Promise<void>;
 }
 
 export const useLibraryStore = create<LibraryStore>((set, get) => ({
   assets: [],
   isLoading: false,
   
-  loadAssets: async () => {
+  loadAssets: async (folderId?: string) => {
     set({ isLoading: true });
-    const assets = await db.libraryAssets.orderBy('uploadedAt').reverse().toArray();
-    set({ assets, isLoading: false });
+    
+    let query = db.libraryAssets.orderBy('uploadedAt').reverse();
+    
+    if (folderId) {
+      const assets = await query.filter(a => a.folderId === folderId).toArray();
+      set({ assets, isLoading: false });
+    } else {
+      const assets = await query.toArray();
+      set({ assets, isLoading: false });
+    }
   },
   
-  addAsset: async (file: File) => {
+  addAsset: async (file: File, folderId = 'uncategorized') => {
     // Read file as data URL
     const dataUrl = await readFileAsDataURL(file);
     
@@ -41,6 +50,7 @@ export const useLibraryStore = create<LibraryStore>((set, get) => ({
     
     const asset: LibraryAsset = {
       id: nanoid(),
+      folderId,
       name: file.name,
       src: dataUrl,
       palette,
@@ -65,6 +75,16 @@ export const useLibraryStore = create<LibraryStore>((set, get) => ({
   
   getAsset: async (id: string) => {
     return db.libraryAssets.get(id);
+  },
+  
+  moveAsset: async (assetId: string, targetFolderId: string) => {
+    await db.libraryAssets.update(assetId, { folderId: targetFolderId });
+    
+    set({
+      assets: get().assets.map(a => 
+        a.id === assetId ? { ...a, folderId: targetFolderId } : a
+      ),
+    });
   },
 }));
 

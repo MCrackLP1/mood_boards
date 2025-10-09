@@ -6,6 +6,7 @@ import { Color } from '@/types';
 
 export interface LibraryAsset {
   id: string;
+  folderId: string; // Folder assignment
   name: string;
   src: string; // Data URL
   thumbnailSrc?: string; // Optional smaller version
