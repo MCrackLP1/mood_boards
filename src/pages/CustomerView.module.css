@@ -52,9 +52,9 @@
 
 /* Canvas Content */
 .content {
-  max-width: 1600px;
+  max-width: 1800px;
   margin: 0 auto;
-  padding: var(--spacing-2xl);
+  padding: var(--spacing-2xl) var(--spacing-xl);
   position: relative;
 }
 
@@ -97,15 +97,16 @@
 /* Canvas Grid Layout */
 .canvas {
   display: grid;
-  grid-template-columns: 200px 1fr 200px 200px;
+  grid-template-columns: 220px 1fr 300px;
   grid-template-rows: auto auto auto;
   grid-template-areas:
-    "colors mood mood weather"
-    "colors mood mood notes"
-    "location timeline notes notes";
-  gap: var(--spacing-2xl);
+    "colors mood notes"
+    "colors mood timeline"
+    "location location weather";
+  gap: clamp(2rem, 4vw, 4rem);
   position: relative;
-  min-height: 800px;
+  min-height: 1000px;
+  padding: var(--spacing-xl) 0;
 }
 
 /* Sections for fallback/simple layouts */

@@ -2,17 +2,18 @@
   grid-area: notes;
   display: flex;
   flex-direction: column;
-  gap: var(--spacing-lg);
+  gap: var(--spacing-xl);
   position: relative;
+  padding: var(--spacing-lg);
 }
 
 .note {
   position: relative;
-  padding: var(--spacing-lg);
-  min-height: 120px;
+  padding: var(--spacing-xl);
+  min-height: 140px;
   box-shadow: 
-    0 4px 8px rgba(0, 0, 0, 0.08),
-    0 2px 4px rgba(0, 0, 0, 0.06);
+    0 6px 12px rgba(0, 0, 0, 0.1),
+    0 3px 6px rgba(0, 0, 0, 0.08);
   transition: all var(--transition-base);
   cursor: default;
 }

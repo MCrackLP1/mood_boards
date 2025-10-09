@@ -1,10 +1,12 @@
 .zone {
   grid-area: timeline;
+  padding: var(--spacing-lg);
 }
 
 .header {
   margin-bottom: var(--spacing-xl);
-  text-align: center;
+  text-align: left;
+  transform: rotate(-1deg);
 }
 
 .timeline {
