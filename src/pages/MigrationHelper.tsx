@@ -3,7 +3,7 @@
  * Provides UI for migrating data from IndexedDB to Supabase
  */
 
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { migrateToSupabase, clearLocalData, type MigrationResult } from '@/modules/database/migration';
 import styles from './MigrationHelper.module.css';
 
