@@ -3,9 +3,7 @@
  * Fetches images and returns them without CORS issues
  */
 
-import type { VercelRequest, VercelResponse } from '@vercel/node';
-
-export default async function handler(req: VercelRequest, res: VercelResponse) {
+export default async function handler(req, res) {
   // Enable CORS
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
@@ -58,7 +56,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   } catch (error) {
     console.error('Image proxy error:', error);
     res.status(500).json({ 
-      error: error instanceof Error ? error.message : 'Unknown error' 
+      error: error.message || 'Unknown error' 
     });
   }
 }

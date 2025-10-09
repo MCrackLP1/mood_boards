@@ -3,9 +3,7 @@
  * Resolves Pinterest URLs and fetches oEmbed data without CORS issues
  */
 
-import type { VercelRequest, VercelResponse } from '@vercel/node';
-
-export default async function handler(req: VercelRequest, res: VercelResponse) {
+export default async function handler(req, res) {
   // Enable CORS
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
@@ -126,8 +124,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     console.error('Pinterest proxy error:', error);
     res.status(500).json({ 
       success: false,
-      error: error instanceof Error ? error.message : 'Unknown error',
-      stack: error instanceof Error ? error.stack : undefined
+      error: error.message || 'Unknown error',
+      stack: error.stack
     });
   }
 }
@@ -135,10 +133,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 /**
  * Extract meta tag content from HTML
  */
-function extractMetaTag(html: string, property: string): string | null {
+function extractMetaTag(html, property) {
   const regex = new RegExp(`<meta[^>]*(?:property|name)=["']${property}["'][^>]*content=["']([^"']*)["']`, 'i');
   const match = html.match(regex);
   return match ? match[1] : null;
 }
-
 
