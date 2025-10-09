@@ -235,9 +235,9 @@ export function CustomerView({ boardId }: CustomerViewProps) {
         </header>
         
         <div className={styles.canvas}>
-          {/* Hero Mood Zone */}
+          {/* Hero Mood Zone - Shows ALL images or images from general */}
           <MoodHeroZone
-            items={getItemsBySection('general')}
+            items={imageItems}
             onImageClick={handleImageClick}
           />
 
@@ -246,11 +246,13 @@ export function CustomerView({ boardId }: CustomerViewProps) {
             <ColorStripeZone colors={uniqueColors} />
           )}
 
-          {/* Location Zone */}
-          <LocationZone
-            items={getItemsBySection('location')}
-            onImageClick={handleImageClick}
-          />
+          {/* Location Zone - Only show if there are specific location images */}
+          {getItemsBySection('location').filter(i => i.type === 'image').length > 0 && (
+            <LocationZone
+              items={getItemsBySection('location')}
+              onImageClick={handleImageClick}
+            />
+          )}
 
           {/* Timeline Zone */}
           {timelineItems.length > 0 && (
