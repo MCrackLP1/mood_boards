@@ -68,6 +68,36 @@ export class MoodboardDatabase extends Dexie {
         }
       });
     });
+
+    // Version 5: Add new item types (link, checklist, timeline) and board customization
+    this.version(5).stores({
+      boards: 'id, createdAt, updatedAt',
+      items: 'id, boardId, section, order, createdAt, type',
+      libraryAssets: 'id, folderId, uploadedAt, name',
+      libraryFolders: 'id, order, createdAt',
+    }).upgrade(async trans => {
+      // Initialize new board fields with defaults
+      await trans.table('boards').toCollection().modify(board => {
+        if (!board.customSections) {
+          board.customSections = [];
+        }
+        if (!board.layoutMode) {
+          board.layoutMode = 'grid';
+        }
+      });
+
+      // Ensure all items have required fields
+      await trans.table('items').toCollection().modify(item => {
+        // Ensure section is set
+        if (!item.section) {
+          item.section = 'general';
+        }
+        // Ensure type is set (default to existing types)
+        if (!item.type) {
+          item.type = item.src ? 'image' : 'note';
+        }
+      });
+    });
   }
 }
 

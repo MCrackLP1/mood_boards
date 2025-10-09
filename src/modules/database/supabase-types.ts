@@ -26,6 +26,8 @@ export interface Database {
           branding_enabled: boolean;
           password_hash: string | null;
           ambient_sound_url: string | null;
+          custom_sections: Json | null;
+          layout_mode: string | null;
         };
         Insert: {
           id: string;
@@ -36,6 +38,8 @@ export interface Database {
           branding_enabled?: boolean;
           password_hash?: string | null;
           ambient_sound_url?: string | null;
+          custom_sections?: Json | null;
+          layout_mode?: string | null;
         };
         Update: {
           id?: string;
@@ -46,44 +50,58 @@ export interface Database {
           branding_enabled?: boolean;
           password_hash?: string | null;
           ambient_sound_url?: string | null;
+          custom_sections?: Json | null;
+          layout_mode?: string | null;
         };
       };
       board_items: {
         Row: {
           id: string;
           board_id: string;
-          type: 'image' | 'note';
-          section: 'inspiration' | 'location' | 'general' | null;
+          type: 'image' | 'note' | 'link' | 'checklist' | 'timeline';
+          section: string | null;
           order: number;
           created_at: number;
           src: string | null;
           palette: Color[] | null;
           text: string | null;
           meta: Json | null;
+          link_url: string | null;
+          link_preview: Json | null;
+          checklist_items: Json | null;
+          timeline_items: Json | null;
         };
         Insert: {
           id: string;
           board_id: string;
-          type: 'image' | 'note';
-          section?: 'inspiration' | 'location' | 'general' | null;
+          type: 'image' | 'note' | 'link' | 'checklist' | 'timeline';
+          section?: string | null;
           order: number;
           created_at: number;
           src?: string | null;
           palette?: Color[] | null;
           text?: string | null;
           meta?: Json | null;
+          link_url?: string | null;
+          link_preview?: Json | null;
+          checklist_items?: Json | null;
+          timeline_items?: Json | null;
         };
         Update: {
           id?: string;
           board_id?: string;
-          type?: 'image' | 'note';
-          section?: 'inspiration' | 'location' | 'general' | null;
+          type?: 'image' | 'note' | 'link' | 'checklist' | 'timeline';
+          section?: string | null;
           order?: number;
           created_at?: number;
           src?: string | null;
           palette?: Color[] | null;
           text?: string | null;
           meta?: Json | null;
+          link_url?: string | null;
+          link_preview?: Json | null;
+          checklist_items?: Json | null;
+          timeline_items?: Json | null;
         };
       };
       library_folders: {

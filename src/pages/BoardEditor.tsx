@@ -9,16 +9,19 @@ import { ImageLightbox } from '@/components/ImageLightbox';
 import { ImageSearch } from '@/components/ImageSearch';
 import { AssetLibrary } from '@/components/AssetLibrary';
 import { KeyboardHelp } from '@/components/KeyboardHelp';
+import { SectionManager } from '@/components/SectionManager';
+import { LayoutSwitcher } from '@/components/LayoutSwitcher';
 import { Button } from '@/modules/ui/Button';
 import { Input } from '@/modules/ui/Input';
 import { Modal } from '@/modules/ui/Modal';
 import { SmoothScroller } from '@/components/SmoothScroller';
 import { processImageFile } from '@/modules/assets/imageUpload';
 import { extractColors } from '@/modules/assets/colorExtraction';
-import { BoardItem } from '@/types';
+import { fetchLinkPreview } from '@/modules/links/linkPreview';
+import { BoardItem, Section } from '@/types';
 import { ImageSearchResult } from '@/modules/images/providers/base';
 import { LibraryAsset } from '@/modules/library/types';
-import { DEFAULT_SECTIONS, Section, SectionType } from '@/types/sections';
+import { DEFAULT_SECTIONS } from '@/types/sections';
 import styles from './BoardEditor.module.css';
 
 interface BoardEditorProps {
@@ -28,13 +31,30 @@ interface BoardEditorProps {
 }
 
 export function BoardEditor({ boardId, onBack, onShare }: BoardEditorProps) {
-  const { currentBoard, currentItems, selectBoard, updateBoard, addItem, updateItem, deleteItem } = useBoardStore();
+  const { 
+    currentBoard, 
+    currentItems, 
+    selectBoard, 
+    updateBoard, 
+    addItem, 
+    updateItem, 
+    deleteItem,
+    reorderItems,
+    addCustomSection,
+    updateCustomSection,
+    deleteCustomSection,
+    reorderSections,
+  } = useBoardStore();
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [boardTitle, setBoardTitle] = useState('');
   const [welcomeText, setWelcomeText] = useState('');
   const [lightboxItem, setLightboxItem] = useState<BoardItem | null>(null);
   const [isImageSearchOpen, setIsImageSearchOpen] = useState(false);
   const [isLibraryOpen, setIsLibraryOpen] = useState(false);
+  const [isSectionManagerOpen, setIsSectionManagerOpen] = useState(false);
+  const [isLinkModalOpen, setIsLinkModalOpen] = useState(false);
+  const [linkUrl, setLinkUrl] = useState('');
+  const [linkLoading, setLinkLoading] = useState(false);
   const [currentSection, setCurrentSection] = useState<Section | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   
@@ -49,7 +69,7 @@ export function BoardEditor({ boardId, onBack, onShare }: BoardEditorProps) {
     }
   }, [currentBoard]);
   
-  const handleFileUpload = async (files: FileList | null, section?: SectionType) => {
+  const handleFileUpload = async (files: FileList | null, section?: string) => {
     if (!files || files.length === 0) return;
     
     try {
@@ -120,11 +140,6 @@ export function BoardEditor({ boardId, onBack, onShare }: BoardEditorProps) {
     }
   };
   
-  const handleAddImage = (section: Section) => {
-    setCurrentSection(section);
-    fileInputRef.current?.click();
-  };
-  
   const handleAddNote = async (section: Section) => {
     const text = prompt('Notiz eingeben:');
     if (text === null) return;
@@ -145,13 +160,74 @@ export function BoardEditor({ boardId, onBack, onShare }: BoardEditorProps) {
     setCurrentSection(section);
     setIsLibraryOpen(true);
   };
+
+  // New Feature Handlers
+  const handleAddLink = (section: Section) => {
+    setCurrentSection(section);
+    setIsLinkModalOpen(true);
+  };
+
+  const handleLinkSubmit = async () => {
+    if (!linkUrl || !currentSection) return;
+    
+    setLinkLoading(true);
+    try {
+      const preview = await fetchLinkPreview(linkUrl);
+      
+      await addItem(boardId, {
+        type: 'link',
+        linkUrl,
+        linkPreview: preview,
+        section: currentSection.id,
+      });
+      
+      setLinkUrl('');
+      setIsLinkModalOpen(false);
+    } catch (error) {
+      console.error('Failed to add link:', error);
+      alert('Fehler beim Hinzufügen des Links');
+    } finally {
+      setLinkLoading(false);
+    }
+  };
+
+  const handleAddChecklist = async (section: Section) => {
+    await addItem(boardId, {
+      type: 'checklist',
+      checklistItems: [],
+      section: section.id,
+    });
+  };
+
+  const handleAddTimeline = async (section: Section) => {
+    await addItem(boardId, {
+      type: 'timeline',
+      timelineItems: [],
+      section: section.id,
+    });
+  };
+
+  const handleLayoutChange = (layoutMode: 'grid' | 'masonry' | 'single-column') => {
+    updateBoard(boardId, { layoutMode });
+  };
+
+  const handleAddImageClick = (section: Section) => {
+    setCurrentSection(section);
+    fileInputRef.current?.click();
+  };
   
   // Group items by section
-  const getItemsBySection = (sectionId: SectionType) => {
+  const getItemsBySection = (sectionId: string) => {
     return currentItems
       .filter(item => (item.section || 'general') === sectionId)
       .sort((a, b) => a.order - b.order);
   };
+
+  // Combine default and custom sections
+  const allSections = [
+    ...DEFAULT_SECTIONS,
+    ...(currentBoard?.customSections || [])
+  ].sort((a, b) => a.order - b.order);
   
   const imageItems = currentItems.filter(item => item.type === 'image');
   
@@ -188,6 +264,13 @@ export function BoardEditor({ boardId, onBack, onShare }: BoardEditorProps) {
         </div>
         
         <div className={styles.headerRight}>
+          <LayoutSwitcher
+            currentLayout={currentBoard?.layoutMode || 'grid'}
+            onLayoutChange={handleLayoutChange}
+          />
+          <Button variant="secondary" onClick={() => setIsSectionManagerOpen(true)}>
+            Sections
+          </Button>
           <Button variant="secondary" onClick={() => setIsSettingsOpen(true)}>
             Einstellungen
           </Button>
@@ -208,18 +291,23 @@ export function BoardEditor({ boardId, onBack, onShare }: BoardEditorProps) {
         />
         
         <SmoothScroller>
-          {DEFAULT_SECTIONS.map(section => (
+          {allSections.map(section => (
             <BoardSection
               key={section.id}
               section={section}
               items={getItemsBySection(section.id)}
-              onAddImage={handleAddImage}
+              layoutMode={currentBoard?.layoutMode || 'grid'}
+              onAddImage={handleAddImageClick}
               onAddNote={handleAddNote}
+              onAddLink={handleAddLink}
+              onAddChecklist={handleAddChecklist}
+              onAddTimeline={handleAddTimeline}
               onOpenLibrary={handleOpenLibrary}
               onOpenWebSearch={handleOpenImageSearch}
               onImageClick={handleImageClick}
               onDeleteItem={deleteItem}
               onUpdateItem={updateItem}
+              onReorderItems={reorderItems}
             />
           ))}
         </SmoothScroller>
@@ -275,6 +363,57 @@ export function BoardEditor({ boardId, onBack, onShare }: BoardEditorProps) {
         <AssetLibrary
           onSelect={handleLibrarySelect}
           onClose={() => setIsLibraryOpen(false)}
+        />
+      )}
+
+      {/* Link Modal */}
+      {isLinkModalOpen && (
+        <Modal
+          isOpen={isLinkModalOpen}
+          onClose={() => {
+            setIsLinkModalOpen(false);
+            setLinkUrl('');
+          }}
+          title="Link hinzufügen"
+        >
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+            <Input
+              label="URL"
+              value={linkUrl}
+              onChange={(e) => setLinkUrl(e.target.value)}
+              placeholder="https://pinterest.com/..."
+              disabled={linkLoading}
+            />
+            <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end' }}>
+              <Button
+                variant="secondary"
+                onClick={() => {
+                  setIsLinkModalOpen(false);
+                  setLinkUrl('');
+                }}
+              >
+                Abbrechen
+              </Button>
+              <Button
+                onClick={handleLinkSubmit}
+                disabled={!linkUrl || linkLoading}
+              >
+                {linkLoading ? 'Lädt...' : 'Hinzufügen'}
+              </Button>
+            </div>
+          </div>
+        </Modal>
+      )}
+
+      {/* Section Manager */}
+      {isSectionManagerOpen && (
+        <SectionManager
+          customSections={currentBoard?.customSections || []}
+          onAdd={(section) => addCustomSection(boardId, section)}
+          onUpdate={(id, updates) => updateCustomSection(boardId, id, updates)}
+          onDelete={(id) => deleteCustomSection(boardId, id)}
+          onReorder={(ids) => reorderSections(boardId, ids)}
+          onClose={() => setIsSectionManagerOpen(false)}
         />
       )}
       

@@ -8,6 +8,9 @@ import { Board, BoardItem } from '@/types';
 import { WelcomeAnimation } from '@/components/WelcomeAnimation';
 import { BrandingSignature } from '@/components/BrandingSignature';
 import { ImageCard } from '@/components/ImageCard';
+import { LinkCard } from '@/components/LinkCard';
+import { Checklist } from '@/components/Checklist';
+import { Timeline } from '@/components/Timeline';
 import { ImageLightbox } from '@/components/ImageLightbox';
 import { SmoothScroller } from '@/components/SmoothScroller';
 import { Button } from '@/modules/ui/Button';
@@ -15,7 +18,7 @@ import { Input } from '@/modules/ui/Input';
 import { audioManager } from '@/modules/audio/audioManager';
 import { verifyPassword } from '@/modules/utils/hash';
 import { updateMetaTags } from '@/modules/utils/meta';
-import { DEFAULT_SECTIONS, SectionType } from '@/types/sections';
+import { DEFAULT_SECTIONS } from '@/types/sections';
 import styles from './CustomerView.module.css';
 
 interface CustomerViewProps {
@@ -162,11 +165,19 @@ export function CustomerView({ boardId }: CustomerViewProps) {
   
   const imageItems = items.filter(item => item.type === 'image');
   
-  const getItemsBySection = (sectionId: SectionType) => {
+  const getItemsBySection = (sectionId: string) => {
     return items
       .filter(item => (item.section || 'general') === sectionId)
       .sort((a, b) => a.order - b.order);
   };
+
+  // Combine default and custom sections
+  const allSections = [
+    ...DEFAULT_SECTIONS,
+    ...(board?.customSections || [])
+  ].sort((a, b) => a.order - b.order);
+
+  const layoutMode = board?.layoutMode || 'grid';
   
   return (
     <div className={styles.page}>
@@ -211,12 +222,15 @@ export function CustomerView({ boardId }: CustomerViewProps) {
         </header>
         
         <SmoothScroller>
-          {DEFAULT_SECTIONS.map(section => {
+          {allSections.map(section => {
             const sectionItems = getItemsBySection(section.id);
             if (sectionItems.length === 0) return null;
             
             const sectionImageItems = sectionItems.filter(i => i.type === 'image');
+            const sectionLinkItems = sectionItems.filter(i => i.type === 'link');
             const sectionNotes = sectionItems.filter(i => i.type === 'note');
+            const sectionChecklistItems = sectionItems.filter(i => i.type === 'checklist');
+            const sectionTimelineItems = sectionItems.filter(i => i.type === 'timeline');
             
             return (
               <div key={section.id} className={styles.section}>
@@ -238,14 +252,50 @@ export function CustomerView({ boardId }: CustomerViewProps) {
                       ))}
                     </div>
                   )}
+
+                  {/* Checklists */}
+                  {sectionChecklistItems.map(item => (
+                    <div key={item.id} style={{ marginBottom: '1rem' }}>
+                      <Checklist
+                        items={item.checklistItems || []}
+                        onChange={() => {}} // Read-only
+                        readOnly={true}
+                      />
+                    </div>
+                  ))}
+
+                  {/* Timelines */}
+                  {sectionTimelineItems.map(item => (
+                    <div key={item.id} style={{ marginBottom: '1rem' }}>
+                      <Timeline
+                        items={item.timelineItems || []}
+                        onChange={() => {}} // Read-only
+                        readOnly={true}
+                      />
+                    </div>
+                  ))}
                   
                   {sectionImageItems.length > 0 && (
-                    <div className={styles.grid}>
+                    <div className={`${styles.grid} ${styles[layoutMode]}`}>
                       {sectionImageItems.map(item => (
                         <ImageCard 
                           key={item.id} 
                           item={item}
                           onClick={() => handleImageClick(item)}
+                        />
+                      ))}
+                    </div>
+                  )}
+
+                  {/* Links */}
+                  {sectionLinkItems.length > 0 && (
+                    <div className={`${styles.linksGrid} ${styles[layoutMode]}`}>
+                      {sectionLinkItems.map(item => (
+                        <LinkCard
+                          key={item.id}
+                          url={item.linkUrl || ''}
+                          preview={item.linkPreview!}
+                          readOnly={true}
                         />
                       ))}
                     </div>

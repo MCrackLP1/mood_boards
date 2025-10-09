@@ -140,6 +140,59 @@
   gap: 1.5rem;
 }
 
+/* Grid Layout (default) */
+.grid.grid {
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+}
+
+/* Masonry Layout */
+.grid.masonry {
+  column-count: 3;
+  column-gap: 1.5rem;
+  grid-template-columns: unset;
+  display: block;
+}
+
+.grid.masonry > * {
+  break-inside: avoid;
+  margin-bottom: 1.5rem;
+}
+
+/* Single Column Layout */
+.grid.single-column {
+  grid-template-columns: 1fr;
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.linksGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 1.5rem;
+}
+
+.linksGrid.grid {
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+}
+
+.linksGrid.masonry {
+  column-count: 2;
+  column-gap: 1.5rem;
+  grid-template-columns: unset;
+  display: block;
+}
+
+.linksGrid.masonry > * {
+  break-inside: avoid;
+  margin-bottom: 1.5rem;
+}
+
+.linksGrid.single-column {
+  grid-template-columns: 1fr;
+  max-width: 800px;
+  margin: 0 auto;
+}
+
 .empty {
   text-align: center;
   padding: 4rem 2rem;
@@ -158,6 +211,18 @@
   .grid {
     grid-template-columns: 1fr;
     gap: 1.5rem;
+  }
+
+  .grid.masonry {
+    column-count: 1;
+  }
+
+  .linksGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .linksGrid.masonry {
+    column-count: 1;
   }
 }
 

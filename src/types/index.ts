@@ -17,13 +17,47 @@ export interface Board {
   brandingEnabled: boolean;
   passwordHash?: string; // Simple SHA-256 hash for basic protection
   ambientSoundUrl?: string; // Optional ambient sound URL
+  customSections?: Section[]; // Custom user-defined sections
+  layoutMode?: 'grid' | 'masonry' | 'single-column'; // Layout preference
+}
+
+export interface Section {
+  id: string;
+  title: string;
+  description: string;
+  icon: string;
+  isCustom: boolean;
+  order: number;
+}
+
+export interface ChecklistItem {
+  id: string;
+  text: string;
+  checked: boolean;
+  order: number;
+}
+
+export interface TimelineItem {
+  id: string;
+  time: string; // ISO 8601 format or time string
+  location: string;
+  description: string;
+  coordinates?: { lat: number; lng: number };
+  order: number;
+}
+
+export interface LinkPreview {
+  title: string;
+  description: string;
+  image: string;
+  domain: string;
 }
 
 export interface BoardItem {
   id: string;
   boardId: string;
-  type: 'image' | 'note';
-  section?: 'inspiration' | 'location' | 'general'; // Section assignment
+  type: 'image' | 'note' | 'link' | 'checklist' | 'timeline';
+  section?: string; // Now flexible to support custom sections
   order: number; // For sorting items within section
   createdAt: number;
   
@@ -33,6 +67,16 @@ export interface BoardItem {
   
   // Note-specific fields
   text?: string;
+  
+  // Link-specific fields
+  linkUrl?: string;
+  linkPreview?: LinkPreview;
+  
+  // Checklist-specific fields
+  checklistItems?: ChecklistItem[];
+  
+  // Timeline-specific fields
+  timelineItems?: TimelineItem[];
   
   // Optional metadata
   meta?: {
