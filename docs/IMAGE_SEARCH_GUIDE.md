@@ -29,8 +29,13 @@ Die Moodboard-App unterstützt die Suche und den Import von hochqualitativen Sto
 #### Unsplash
 1. Gehe zu https://unsplash.com/developers
 2. Klicke auf "Register as a developer"
-3. Erstelle eine neue App
-4. Kopiere den "Access Key"
+3. Erstelle eine neue App:
+   - Name: "Moodboard Webapp" (oder beliebig)
+   - Description: "Personal moodboard tool"
+   - Akzeptiere die API Guidelines
+4. Kopiere den **"Access Key"** (NICHT Secret Key!)
+   - Zu finden unter: Dashboard → Your Apps → [App Name]
+   - Der Access Key beginnt meist mit einem langen alphanumerischen String
 
 #### Pexels
 1. Gehe zu https://www.pexels.com/api/
@@ -49,10 +54,20 @@ Erstelle eine `.env`-Datei im Projekt-Root:
 
 ```bash
 # Image Search Providers
-VITE_IMAGE_UNSPLASH_KEY=dein_unsplash_access_key
+# Unsplash: Verwende den "Access Key" (nicht Secret Key!)
+VITE_IMAGE_UNSPLASH_KEY=abcd1234efgh5678ijkl9012mnop3456qrst7890uvwxyz
+
+# Pexels: API Key aus dem Dashboard
 VITE_IMAGE_PEXELS_KEY=dein_pexels_api_key
+
+# Pixabay: API Key (wird direkt nach Anmeldung angezeigt)
 VITE_IMAGE_PIXABAY_KEY=dein_pixabay_api_key
 ```
+
+**Wichtig für Unsplash**: 
+- ✅ **Access Key** verwenden (öffentliche Anfragen)
+- ❌ **Nicht** den Secret Key verwenden (nur für Server)
+- Der Access Key ist länger (~60 Zeichen)
 
 ### Schritt 3: Dev-Server neu starten
 
@@ -126,8 +141,10 @@ Description: "From Unsplash"
 
 ### "Keine Bilder gefunden"
 - **Lösung**: Prüfe, ob API-Keys korrekt in `.env` eingetragen sind
+- **Lösung**: Bei Unsplash: Access Key verwenden (nicht Secret Key!)
 - **Lösung**: Dev-Server neu starten nach `.env`-Änderung
 - **Lösung**: Andere Suchbegriffe probieren
+- **Lösung**: Browser-Konsole öffnen für genaue Fehlermeldungen
 
 ### API-Rate-Limit erreicht
 - **Lösung**: 1 Stunde warten (Limits resetten stündlich)
