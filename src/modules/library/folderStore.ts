@@ -72,8 +72,13 @@ export const useFolderStore = create<FolderStore>((set, get) => ({
 
         set({ folders, isLoading: false });
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Failed to load folders from Supabase, falling back to IndexedDB:', error);
+      console.error('Folder load error details:', {
+        message: error?.message,
+        code: error?.code,
+        details: error?.details,
+      });
       const folders = await db.libraryFolders.orderBy('order').toArray();
       
       // Initialize default folders if none exist (except uncategorized)

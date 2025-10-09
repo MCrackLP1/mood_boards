@@ -59,16 +59,29 @@ export const useLibraryStore = create<LibraryStore>((set, get) => ({
 
       // Sync to IndexedDB
       if (folderId) {
-        await db.libraryAssets.where('folderId').equals(folderId).delete();
-        await db.libraryAssets.bulkAdd(assets);
+        // Don't clear all - just add new ones
+        for (const asset of assets) {
+          try {
+            await db.libraryAssets.put(asset);
+          } catch (e) {
+            console.warn('Failed to sync asset to IndexedDB:', e);
+          }
+        }
       } else {
         await db.libraryAssets.clear();
-        await db.libraryAssets.bulkAdd(assets);
+        if (assets.length > 0) {
+          await db.libraryAssets.bulkAdd(assets);
+        }
       }
 
       set({ assets, isLoading: false });
-    } catch (error) {
+    } catch (error: any) {
       console.error('Failed to load assets from Supabase, falling back to IndexedDB:', error);
+      console.error('Load assets error details:', {
+        message: error?.message,
+        code: error?.code,
+        details: error?.details,
+      });
       let assets: LibraryAsset[];
       if (folderId) {
         assets = await db.libraryAssets.where('folderId').equals(folderId).reverse().sortBy('uploadedAt');
@@ -117,16 +130,33 @@ export const useLibraryStore = create<LibraryStore>((set, get) => ({
         tags: asset.tags,
       });
 
-      if (error) throw error;
-    } catch (error) {
+      if (error) {
+        console.error('Supabase insert error:', error);
+        throw error;
+      }
+    } catch (error: any) {
       console.error('Failed to save asset to Supabase:', error);
+      console.error('Error details:', {
+        message: error?.message,
+        code: error?.code,
+        details: error?.details,
+        hint: error?.hint,
+      });
+      // Don't throw - continue with IndexedDB
     }
 
-    // Save to IndexedDB
+    // Save to IndexedDB first (for immediate display)
     await db.libraryAssets.add(asset);
     
-    // Update store
+    // Update store immediately for instant feedback
     set({ assets: [asset, ...get().assets] });
+    
+    // Reload from Supabase after a short delay to ensure sync
+    setTimeout(() => {
+      get().loadAssets(folderId).catch(err => 
+        console.warn('Background reload failed:', err)
+      );
+    }, 1000);
     
     return asset;
   },
