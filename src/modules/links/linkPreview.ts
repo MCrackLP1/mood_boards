@@ -129,7 +129,7 @@ export function detectPlatform(url: string): string | null {
 }
 
 /**
- * Extracts direct image URL from Pinterest URL
+ * Extracts direct image URL from Pinterest URL using oEmbed API
  */
 export async function extractPinterestImage(url: string): Promise<string | null> {
   try {
@@ -138,36 +138,78 @@ export async function extractPinterestImage(url: string): Promise<string | null>
       return url;
     }
 
-    // Try to fetch the Pinterest page and extract the image
-    const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(url)}`;
-    const response = await fetch(proxyUrl);
-    
-    if (!response.ok) {
-      return null;
+    // Resolve shortened pin.it URLs first
+    let resolvedUrl = url;
+    if (url.includes('pin.it')) {
+      // Try to expand the shortened URL by using the oEmbed API
+      resolvedUrl = url; // We'll use it as-is, oEmbed handles it
     }
 
-    const data = await response.json();
-    const html = data.contents;
-
-    // Look for various Pinterest image patterns
-    // Method 1: og:image meta tag (usually high quality)
-    const ogImage = extractMetaTag(html, 'og:image');
-    if (ogImage && (ogImage.includes('pinimg.com') || ogImage.includes('pinterest'))) {
-      return ogImage;
+    // Method 1: Use Pinterest's official oEmbed API (no CORS issues!)
+    try {
+      const oembedUrl = `https://www.pinterest.com/oembed/?url=${encodeURIComponent(resolvedUrl)}&format=json`;
+      const oembedResponse = await fetch(oembedUrl);
+      
+      if (oembedResponse.ok) {
+        const oembedData = await oembedResponse.json();
+        
+        // The oEmbed response contains thumbnail_url with the image
+        if (oembedData.thumbnail_url) {
+          // Try to get higher quality version
+          let imageUrl = oembedData.thumbnail_url;
+          
+          // Replace smaller sizes with originals for better quality
+          imageUrl = imageUrl.replace('/236x/', '/originals/');
+          imageUrl = imageUrl.replace('/474x/', '/originals/');
+          imageUrl = imageUrl.replace('/564x/', '/originals/');
+          imageUrl = imageUrl.replace('/736x/', '/originals/');
+          
+          return imageUrl;
+        }
+      }
+    } catch (oembedError) {
+      console.warn('oEmbed API failed, trying alternative methods:', oembedError);
     }
 
-    // Method 2: Look for direct image URLs in the HTML
-    const imageRegex = /https?:\/\/i\.pinimg\.com\/originals\/[^"'\s]+\.(jpg|jpeg|png|gif|webp)/gi;
-    const matches = html.match(imageRegex);
-    if (matches && matches.length > 0) {
-      return matches[0];
-    }
+    // Method 2: Try alternative CORS proxies
+    const proxies = [
+      `https://corsproxy.io/?${encodeURIComponent(resolvedUrl)}`,
+      `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(resolvedUrl)}`,
+    ];
 
-    // Method 3: Look for 736x URLs (medium quality)
-    const mediumRegex = /https?:\/\/i\.pinimg\.com\/736x\/[^"'\s]+\.(jpg|jpeg|png|gif|webp)/gi;
-    const mediumMatches = html.match(mediumRegex);
-    if (mediumMatches && mediumMatches.length > 0) {
-      return mediumMatches[0];
+    for (const proxyUrl of proxies) {
+      try {
+        const response = await fetch(proxyUrl, { 
+          signal: AbortSignal.timeout(5000) // 5 second timeout
+        });
+        
+        if (!response.ok) continue;
+
+        const html = await response.text();
+
+        // Look for og:image meta tag
+        const ogImage = extractMetaTag(html, 'og:image');
+        if (ogImage && (ogImage.includes('pinimg.com') || ogImage.includes('pinterest'))) {
+          return ogImage;
+        }
+
+        // Look for direct image URLs
+        const imageRegex = /https?:\/\/i\.pinimg\.com\/originals\/[^"'\s]+\.(jpg|jpeg|png|gif|webp)/gi;
+        const matches = html.match(imageRegex);
+        if (matches && matches.length > 0) {
+          return matches[0];
+        }
+
+        // Look for 736x URLs (medium quality)
+        const mediumRegex = /https?:\/\/i\.pinimg\.com\/736x\/[^"'\s]+\.(jpg|jpeg|png|gif|webp)/gi;
+        const mediumMatches = html.match(mediumRegex);
+        if (mediumMatches && mediumMatches.length > 0) {
+          return mediumMatches[0];
+        }
+      } catch (proxyError) {
+        console.warn(`Proxy ${proxyUrl} failed:`, proxyError);
+        continue;
+      }
     }
 
     return null;
@@ -195,59 +237,72 @@ export function isPinterestBoard(url: string): boolean {
 
 /**
  * Extracts all image URLs from a Pinterest Board
+ * Note: Pinterest Board extraction is limited due to Pinterest's protection against scraping
  */
 export async function extractPinterestBoardImages(url: string): Promise<string[]> {
   try {
-    const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(url)}`;
-    const response = await fetch(proxyUrl);
-    
-    if (!response.ok) {
-      return [];
-    }
+    // Try alternative CORS proxies with fallback
+    const proxies = [
+      `https://corsproxy.io/?${encodeURIComponent(url)}`,
+      `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(url)}`,
+    ];
 
-    const data = await response.json();
-    const html = data.contents;
-
-    // Extract all Pinterest image URLs from the board page
-    const imageUrls: Set<string> = new Set();
-
-    // Method 1: Find all pinimg.com URLs in the HTML
-    const originalRegex = /https?:\/\/i\.pinimg\.com\/originals\/[^"'\s]+\.(jpg|jpeg|png|gif|webp)/gi;
-    const originalMatches = html.match(originalRegex);
-    if (originalMatches) {
-      originalMatches.forEach((url: string) => imageUrls.add(url));
-    }
-
-    // Method 2: Find 736x URLs (medium quality) if originals not found
-    if (imageUrls.size === 0) {
-      const mediumRegex = /https?:\/\/i\.pinimg\.com\/736x\/[^"'\s]+\.(jpg|jpeg|png|gif|webp)/gi;
-      const mediumMatches = html.match(mediumRegex);
-      if (mediumMatches) {
-        // Convert 736x URLs to originals URLs
-        mediumMatches.forEach((url: string) => {
-          const originalUrl = url.replace('/736x/', '/originals/');
-          imageUrls.add(originalUrl);
+    for (const proxyUrl of proxies) {
+      try {
+        console.log(`Trying to fetch board with proxy...`);
+        const response = await fetch(proxyUrl, { 
+          signal: AbortSignal.timeout(10000) // 10 second timeout for boards
         });
+        
+        if (!response.ok) {
+          console.warn(`Proxy returned ${response.status}`);
+          continue;
+        }
+
+        const html = await response.text();
+
+        // Extract all Pinterest image URLs from the board page
+        const imageUrls: Set<string> = new Set();
+
+        // Method 1: Find all pinimg.com URLs in the HTML
+        const originalRegex = /https?:\/\/i\.pinimg\.com\/originals\/[^"'\s]+\.(jpg|jpeg|png|gif|webp)/gi;
+        const originalMatches = html.match(originalRegex);
+        if (originalMatches) {
+          originalMatches.forEach((url: string) => imageUrls.add(url));
+        }
+
+        // Method 2: Find 736x URLs (medium quality)
+        const mediumRegex = /https?:\/\/i\.pinimg\.com\/736x\/[^"'\s]+\.(jpg|jpeg|png|gif|webp)/gi;
+        const mediumMatches = html.match(mediumRegex);
+        if (mediumMatches) {
+          mediumMatches.forEach((url: string) => {
+            // Try originals first, but keep 736x as fallback
+            imageUrls.add(url);
+          });
+        }
+
+        // Method 3: Look for 564x URLs (smaller quality) as fallback
+        const smallRegex = /https?:\/\/i\.pinimg\.com\/564x\/[^"'\s]+\.(jpg|jpeg|png|gif|webp)/gi;
+        const smallMatches = html.match(smallRegex);
+        if (smallMatches) {
+          smallMatches.forEach((url: string) => imageUrls.add(url));
+        }
+
+        // If we found images, return them
+        if (imageUrls.size > 0) {
+          // Limit to reasonable number of images (max 30 to avoid overwhelming)
+          const uniqueUrls = Array.from(imageUrls).slice(0, 30);
+          console.log(`Found ${uniqueUrls.length} images in Pinterest board`);
+          return uniqueUrls;
+        }
+      } catch (proxyError) {
+        console.warn(`Proxy failed:`, proxyError);
+        continue;
       }
     }
 
-    // Method 3: Look for 564x URLs (smaller quality) as fallback
-    if (imageUrls.size === 0) {
-      const smallRegex = /https?:\/\/i\.pinimg\.com\/564x\/[^"'\s]+\.(jpg|jpeg|png|gif|webp)/gi;
-      const smallMatches = html.match(smallRegex);
-      if (smallMatches) {
-        smallMatches.forEach((url: string) => {
-          const originalUrl = url.replace('/564x/', '/originals/');
-          imageUrls.add(originalUrl);
-        });
-      }
-    }
-
-    // Limit to reasonable number of images (max 50 to avoid overwhelming)
-    const uniqueUrls = Array.from(imageUrls).slice(0, 50);
-    
-    console.log(`Found ${uniqueUrls.length} images in Pinterest board`);
-    return uniqueUrls;
+    console.warn('All proxies failed to extract board images');
+    return [];
   } catch (error) {
     console.error('Failed to extract Pinterest board images:', error);
     return [];

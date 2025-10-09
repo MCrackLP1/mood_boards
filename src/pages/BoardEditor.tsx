@@ -182,16 +182,15 @@ export function BoardEditor({ boardId, onBack, onShare }: BoardEditorProps) {
           let failCount = 0;
           
           // Process images in batches to avoid overwhelming the system
-          const batchSize = 5;
+          const batchSize = 3;
           for (let i = 0; i < imageUrls.length; i += batchSize) {
             const batch = imageUrls.slice(i, i + batchSize);
             
             await Promise.all(
               batch.map(async (imageUrl) => {
                 try {
-                  // Use CORS proxy to fetch the image
-                  const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(imageUrl)}`;
-                  const response = await fetch(proxyUrl);
+                  // Pinterest images can usually be loaded directly (no CORS issues for pinimg.com)
+                  const response = await fetch(imageUrl);
                   const blob = await response.blob();
                   const dataUrl = await new Promise<string>((resolve) => {
                     const reader = new FileReader();
@@ -228,7 +227,9 @@ export function BoardEditor({ boardId, onBack, onShare }: BoardEditorProps) {
           alert(`Pinterest Board importiert!\n✅ ${successCount} Bilder erfolgreich hinzugefügt${failCount > 0 ? `\n⚠️ ${failCount} Bilder konnten nicht geladen werden` : ''}`);
           return;
         } else {
-          alert('Keine Bilder im Pinterest Board gefunden. Versuche es als einzelnen Pin...');
+          alert('⚠️ Pinterest Board konnte nicht geladen werden.\n\nTipp: Versuche stattdessen einzelne Pins hinzuzufügen, die funktionieren zuverlässiger!');
+          setLinkLoading(false);
+          return;
         }
       }
       
@@ -238,9 +239,12 @@ export function BoardEditor({ boardId, onBack, onShare }: BoardEditorProps) {
         
         if (imageUrl) {
           try {
-            // Use CORS proxy to fetch the image
-            const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(imageUrl)}`;
-            const response = await fetch(proxyUrl);
+            // Pinterest images from pinimg.com can be loaded directly (no CORS issues)
+            const response = await fetch(imageUrl);
+            if (!response.ok) {
+              throw new Error(`Failed to fetch image: ${response.status}`);
+            }
+            
             const blob = await response.blob();
             const dataUrl = await new Promise<string>((resolve) => {
               const reader = new FileReader();
@@ -268,20 +272,8 @@ export function BoardEditor({ boardId, onBack, onShare }: BoardEditorProps) {
             return;
           } catch (error) {
             console.error('Error processing Pinterest image:', error);
-            // Try adding with direct URL as fallback
-            await addItem(boardId, {
-              type: 'image',
-              src: imageUrl,
-              palette: [],
-              section: currentSection.id,
-              meta: {
-                label: 'Pinterest',
-                description: linkUrl,
-              },
-            });
-            
-            setLinkUrl('');
-            setIsLinkModalOpen(false);
+            alert('❌ Fehler beim Laden des Pinterest-Bildes.\n\nBitte versuche es erneut oder verwende einen anderen Link.');
+            setLinkLoading(false);
             return;
           }
         } else {
