@@ -16,6 +16,7 @@ import { audioManager } from '@/modules/audio/audioManager';
 import { verifyPassword } from '@/modules/utils/hash';
 import { updateMetaTags } from '@/modules/utils/meta';
 import { CanvasGrain } from '@/components/canvas/CanvasGrain';
+import { CanvasReveal } from '@/components/canvas/CanvasReveal';
 import { MoodHeroZone } from '@/components/canvas/zones/MoodHeroZone';
 import { ColorStripeZone } from '@/components/canvas/zones/ColorStripeZone';
 import { NotesZone } from '@/components/canvas/zones/NotesZone';
@@ -40,6 +41,7 @@ export function CustomerView({ boardId }: CustomerViewProps) {
   const [isAudioPlaying, setIsAudioPlaying] = useState(false);
   const [audioVolume, setAudioVolume] = useState(0.2);
   const [lightboxItem, setLightboxItem] = useState<BoardItem | null>(null);
+  const [isRevealed, setIsRevealed] = useState(false);
   
   useEffect(() => {
     loadBoard();
@@ -201,9 +203,17 @@ export function CustomerView({ boardId }: CustomerViewProps) {
         />
       )}
       
+      {!showWelcome && !isRevealed && (
+        <CanvasReveal
+          items={items}
+          onReveal={() => setIsRevealed(true)}
+        />
+      )}
+      
       <BrandingSignature visible={board.brandingEnabled} />
       
-      <div className={styles.content}>
+      {isRevealed && (
+        <div className={styles.content}>
         <header className={styles.header}>
           <h1 className={styles.title}>{board.title}</h1>
           
@@ -275,7 +285,8 @@ export function CustomerView({ boardId }: CustomerViewProps) {
             <p>Dieses Board ist noch leer.</p>
           </div>
         )}
-      </div>
+        </div>
+      )}
       
       {lightboxItem && (
         <ImageLightbox

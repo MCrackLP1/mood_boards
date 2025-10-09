@@ -1,0 +1,110 @@
+.container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: var(--canvas-bg);
+  z-index: 1000;
+  overflow: hidden;
+}
+
+.scattered {
+  position: relative;
+  width: 100%;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: var(--spacing-2xl);
+}
+
+.title {
+  font-family: var(--font-heading);
+  font-size: clamp(2.5rem, 6vw, 5rem);
+  font-weight: 700;
+  margin: 0 0 var(--spacing-md) 0;
+  color: var(--canvas-ink);
+  text-align: center;
+  letter-spacing: -0.02em;
+  z-index: 100;
+  position: relative;
+}
+
+.hint {
+  font-family: var(--font-handwriting);
+  font-size: clamp(1.25rem, 3vw, 2rem);
+  color: var(--canvas-ink);
+  opacity: 0.6;
+  text-align: center;
+  margin: 0 0 var(--spacing-2xl) 0;
+  z-index: 100;
+  position: relative;
+}
+
+.pile {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 100%;
+  height: 100%;
+  max-width: 1200px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.item {
+  position: absolute;
+  width: clamp(200px, 20vw, 280px);
+  cursor: pointer;
+  transition: z-index 0s;
+}
+
+.item:hover {
+  z-index: 999 !important;
+}
+
+.revealButton {
+  position: relative;
+  z-index: 100;
+  margin-top: auto;
+  padding: var(--spacing-lg) var(--spacing-2xl);
+  font-family: var(--font-heading);
+  font-size: var(--font-size-lg);
+  font-weight: 600;
+  color: white;
+  background: var(--gradient-primary);
+  border: none;
+  border-radius: var(--radius-xl);
+  cursor: pointer;
+  box-shadow: var(--shadow-lg), var(--shadow-glow);
+  transition: all var(--transition-base);
+}
+
+.revealButton:hover {
+  box-shadow: var(--shadow-xl), var(--shadow-glow-strong);
+  transform: translateY(-2px);
+}
+
+@media (max-width: 768px) {
+  .title {
+    font-size: 2rem;
+  }
+  
+  .hint {
+    font-size: 1.125rem;
+  }
+  
+  .item {
+    width: 150px;
+  }
+  
+  .revealButton {
+    padding: var(--spacing-md) var(--spacing-xl);
+    font-size: var(--font-size-base);
+  }
+}
+
