@@ -1,24 +1,28 @@
 /**
- * Customer view page (read-only)
+ * Customer View - Canvas Mode
+ * Emotional, artistic presentation for clients
  */
 
 import { useEffect, useState } from 'react';
+import { motion } from 'framer-motion';
 import { db } from '@/modules/database/db';
-import { Board, BoardItem } from '@/types';
+import { Board, BoardItem, Color } from '@/types';
 import { WelcomeAnimation } from '@/components/WelcomeAnimation';
 import { BrandingSignature } from '@/components/BrandingSignature';
-import { ImageCard } from '@/components/ImageCard';
-import { LinkCard } from '@/components/LinkCard';
-import { Checklist } from '@/components/Checklist';
-import { Timeline } from '@/components/Timeline';
 import { ImageLightbox } from '@/components/ImageLightbox';
-import { SmoothScroller } from '@/components/SmoothScroller';
 import { Button } from '@/modules/ui/Button';
 import { Input } from '@/modules/ui/Input';
 import { audioManager } from '@/modules/audio/audioManager';
 import { verifyPassword } from '@/modules/utils/hash';
 import { updateMetaTags } from '@/modules/utils/meta';
-import { DEFAULT_SECTIONS } from '@/types/sections';
+import { CanvasGrain } from '@/components/canvas/CanvasGrain';
+import { MoodHeroZone } from '@/components/canvas/zones/MoodHeroZone';
+import { ColorStripeZone } from '@/components/canvas/zones/ColorStripeZone';
+import { NotesZone } from '@/components/canvas/zones/NotesZone';
+import { LocationZone } from '@/components/canvas/zones/LocationZone';
+import { TimelineCanvasZone } from '@/components/canvas/zones/TimelineCanvasZone';
+import { WeatherBadgeZone } from '@/components/canvas/zones/WeatherBadgeZone';
+import { fadeInOut } from '@/animations/canvas';
 import styles from './CustomerView.module.css';
 
 interface CustomerViewProps {
@@ -51,7 +55,6 @@ export function CustomerView({ boardId }: CustomerViewProps) {
     
     setBoard(loadedBoard);
     
-    // Check if password protected
     if (loadedBoard.passwordHash) {
       setIsPasswordProtected(true);
       setIsUnlocked(false);
@@ -69,7 +72,6 @@ export function CustomerView({ boardId }: CustomerViewProps) {
     
     setItems(loadedItems);
     
-    // Update meta tags for SEO
     if (board) {
       const firstImage = loadedItems.find(item => item.type === 'image' && item.src);
       updateMetaTags({
@@ -99,8 +101,6 @@ export function CustomerView({ boardId }: CustomerViewProps) {
       audioManager.stop();
       setIsAudioPlaying(false);
     } else {
-      // Play ambient sound (for demo, using a placeholder)
-      // In production, board.ambientSoundUrl would be set
       if (board?.ambientSoundUrl) {
         audioManager.play(board.ambientSoundUrl, audioVolume);
         setIsAudioPlaying(true);
@@ -171,16 +171,29 @@ export function CustomerView({ boardId }: CustomerViewProps) {
       .sort((a, b) => a.order - b.order);
   };
 
-  // Combine default and custom sections
-  const allSections = [
-    ...DEFAULT_SECTIONS,
-    ...(board?.customSections || [])
-  ].sort((a, b) => a.order - b.order);
+  // Extract all colors from all images
+  const allColors: Color[] = [];
+  items.forEach(item => {
+    if (item.palette) {
+      allColors.push(...item.palette);
+    }
+  });
+  const uniqueColors = Array.from(
+    new Map(allColors.map(c => [c.hex, c])).values()
+  );
 
-  const layoutMode = board?.layoutMode || 'grid';
+  // Get timeline items
+  const timelineItems = items
+    .filter(i => i.type === 'timeline')
+    .flatMap(i => i.timelineItems || []);
   
   return (
-    <div className={styles.page}>
+    <motion.div
+      className={styles.page}
+      {...fadeInOut}
+    >
+      <CanvasGrain />
+      
       {showWelcome && (
         <WelcomeAnimation
           welcomeText={board.welcomeText}
@@ -221,90 +234,39 @@ export function CustomerView({ boardId }: CustomerViewProps) {
           )}
         </header>
         
-        <SmoothScroller>
-          {allSections.map(section => {
-            const sectionItems = getItemsBySection(section.id);
-            if (sectionItems.length === 0) return null;
-            
-            const sectionImageItems = sectionItems.filter(i => i.type === 'image');
-            const sectionLinkItems = sectionItems.filter(i => i.type === 'link');
-            const sectionNotes = sectionItems.filter(i => i.type === 'note');
-            const sectionChecklistItems = sectionItems.filter(i => i.type === 'checklist');
-            const sectionTimelineItems = sectionItems.filter(i => i.type === 'timeline');
-            
-            return (
-              <div key={section.id} className={styles.section}>
-                <div className={styles.sectionHeader}>
-                  <span className={styles.sectionIcon}>{section.icon}</span>
-                  <div>
-                    <h2 className={styles.sectionTitle}>{section.title}</h2>
-                    <p className={styles.sectionDescription}>{section.description}</p>
-                  </div>
-                </div>
-                
-                <div className={styles.sectionContent}>
-                  {sectionNotes.length > 0 && (
-                    <div className={styles.notes}>
-                      {sectionNotes.map(note => (
-                        <div key={note.id} className={styles.note}>
-                          <p>{note.text}</p>
-                        </div>
-                      ))}
-                    </div>
-                  )}
+        <div className={styles.canvas}>
+          {/* Hero Mood Zone */}
+          <MoodHeroZone
+            items={getItemsBySection('general')}
+            onImageClick={handleImageClick}
+          />
 
-                  {/* Checklists */}
-                  {sectionChecklistItems.map(item => (
-                    <div key={item.id} style={{ marginBottom: '1rem' }}>
-                      <Checklist
-                        items={item.checklistItems || []}
-                        onChange={() => {}} // Read-only
-                        readOnly={true}
-                      />
-                    </div>
-                  ))}
+          {/* Color Palette Zone */}
+          {uniqueColors.length > 0 && (
+            <ColorStripeZone colors={uniqueColors} />
+          )}
 
-                  {/* Timelines */}
-                  {sectionTimelineItems.map(item => (
-                    <div key={item.id} style={{ marginBottom: '1rem' }}>
-                      <Timeline
-                        items={item.timelineItems || []}
-                        onChange={() => {}} // Read-only
-                        readOnly={true}
-                      />
-                    </div>
-                  ))}
-                  
-                  {sectionImageItems.length > 0 && (
-                    <div className={`${styles.grid} ${styles[layoutMode]}`}>
-                      {sectionImageItems.map(item => (
-                        <ImageCard 
-                          key={item.id} 
-                          item={item}
-                          onClick={() => handleImageClick(item)}
-                        />
-                      ))}
-                    </div>
-                  )}
+          {/* Location Zone */}
+          <LocationZone
+            items={getItemsBySection('location')}
+            onImageClick={handleImageClick}
+          />
 
-                  {/* Links */}
-                  {sectionLinkItems.length > 0 && (
-                    <div className={`${styles.linksGrid} ${styles[layoutMode]}`}>
-                      {sectionLinkItems.map(item => (
-                        <LinkCard
-                          key={item.id}
-                          url={item.linkUrl || ''}
-                          preview={item.linkPreview!}
-                          readOnly={true}
-                        />
-                      ))}
-                    </div>
-                  )}
-                </div>
-              </div>
-            );
-          })}
-        </SmoothScroller>
+          {/* Timeline Zone */}
+          {timelineItems.length > 0 && (
+            <TimelineCanvasZone items={timelineItems} />
+          )}
+
+          {/* Weather Badge */}
+          <WeatherBadgeZone
+            temp={22}
+            condition="Sonnig"
+            icon="☀️"
+          />
+
+          {/* Notes Zone */}
+          <NotesZone items={getItemsBySection('notes')} />
+        </div>
         
         {items.length === 0 && (
           <div className={styles.empty}>
@@ -321,7 +283,6 @@ export function CustomerView({ boardId }: CustomerViewProps) {
           onPrev={imageItems.length > 1 ? handleLightboxPrev : undefined}
         />
       )}
-    </div>
+    </motion.div>
   );
 }
-

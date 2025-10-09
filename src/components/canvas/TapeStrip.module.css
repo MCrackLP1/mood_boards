@@ -1,0 +1,38 @@
+.tape {
+  background: var(--canvas-tape);
+  backdrop-filter: blur(2px);
+  position: absolute;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
+  pointer-events: none;
+}
+
+.tape::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: repeating-linear-gradient(
+    90deg,
+    transparent,
+    transparent 2px,
+    rgba(255, 255, 255, 0.1) 2px,
+    rgba(255, 255, 255, 0.1) 4px
+  );
+  opacity: 0.3;
+}
+
+.horizontal {
+  height: 20px;
+  top: -10px;
+  left: 50%;
+  transform-origin: center;
+  margin-left: -30px; /* Half of default width */
+}
+
+.vertical {
+  width: 20px;
+  left: -10px;
+  top: 50%;
+  transform-origin: center;
+  margin-top: -30px; /* Half of default height */
+}
+
