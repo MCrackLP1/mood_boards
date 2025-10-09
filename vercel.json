@@ -7,6 +7,12 @@
   "env": {
     "VITE_SUPABASE_URL": "https://bzncifehxpmyixprwqgi.supabase.co",
     "VITE_SUPABASE_ANON_KEY": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJ6bmNpZmVoeHBteWl4cHJ3cWdpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk5Nzc1MDEsImV4cCI6MjA3NTU1MzUwMX0.m_GJxXfte1lUzEOhVErGVp1I5mOUrwaDJdckorB-AWE"
-  }
+  },
+  "rewrites": [
+    {
+      "source": "/api/:path*",
+      "destination": "/api/:path*"
+    }
+  ]
 }
 

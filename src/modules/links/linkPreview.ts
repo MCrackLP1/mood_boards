@@ -133,7 +133,7 @@ export function detectPlatform(url: string): string | null {
 }
 
 /**
- * Extracts direct image URL from Pinterest URL using oEmbed API
+ * Extracts direct image URL from Pinterest URL using backend proxy
  */
 export async function extractPinterestImage(url: string): Promise<string | null> {
   try {
@@ -142,43 +142,29 @@ export async function extractPinterestImage(url: string): Promise<string | null>
       return url;
     }
 
-    // Resolve shortened pin.it URLs first
-    let resolvedUrl = url;
-    if (url.includes('pin.it')) {
-      // Try to expand the shortened URL by using the oEmbed API
-      resolvedUrl = url; // We'll use it as-is, oEmbed handles it
-    }
-
-    // Method 1: Use Pinterest's official oEmbed API (no CORS issues!)
+    // Method 1: Use our Vercel serverless function (no CORS issues!)
     try {
-      const oembedUrl = `https://www.pinterest.com/oembed/?url=${encodeURIComponent(resolvedUrl)}&format=json`;
-      const oembedResponse = await fetch(oembedUrl);
+      const proxyUrl = `/api/pinterest-proxy?url=${encodeURIComponent(url)}`;
+      const response = await fetch(proxyUrl, {
+        signal: AbortSignal.timeout(10000) // 10 second timeout
+      });
       
-      if (oembedResponse.ok) {
-        const oembedData = await oembedResponse.json();
+      if (response.ok) {
+        const data = await response.json();
         
-        // The oEmbed response contains thumbnail_url with the image
-        if (oembedData.thumbnail_url) {
-          // Try to get higher quality version
-          let imageUrl = oembedData.thumbnail_url;
-          
-          // Replace smaller sizes with originals for better quality
-          imageUrl = imageUrl.replace('/236x/', '/originals/');
-          imageUrl = imageUrl.replace('/474x/', '/originals/');
-          imageUrl = imageUrl.replace('/564x/', '/originals/');
-          imageUrl = imageUrl.replace('/736x/', '/originals/');
-          
-          return imageUrl;
+        if (data.success && data.data) {
+          // Try high quality image first, fallback to thumbnail
+          return data.data.high_quality_image || data.data.thumbnail_url;
         }
       }
-    } catch (oembedError) {
-      console.warn('oEmbed API failed, trying alternative methods:', oembedError);
+    } catch (proxyError) {
+      console.warn('Backend proxy failed, trying alternative methods:', proxyError);
     }
 
-    // Method 2: Try alternative CORS proxies
+    // Method 2: Try alternative CORS proxies as fallback
     const proxies = [
-      `https://corsproxy.io/?${encodeURIComponent(resolvedUrl)}`,
-      `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(resolvedUrl)}`,
+      `https://corsproxy.io/?${encodeURIComponent(url)}`,
+      `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(url)}`,
     ];
 
     for (const proxyUrl of proxies) {
