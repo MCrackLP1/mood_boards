@@ -90,8 +90,6 @@ export function BoardEditor({ boardId, onBack, onShare }: BoardEditorProps) {
   };
   
   const handleImageSearchSelect = async (dataUrl: string, result: ImageSearchResult) => {
-    setIsUploading(true);
-    
     try {
       // Extract colors from the image
       const palette = await extractColors(dataUrl);
@@ -107,9 +105,7 @@ export function BoardEditor({ boardId, onBack, onShare }: BoardEditorProps) {
       });
     } catch (error) {
       console.error('Error adding image:', error);
-      alert('Fehler beim Hinzufügen des Bildes');
-    } finally {
-      setIsUploading(false);
+      throw error; // Re-throw to handle in batch
     }
   };
   
