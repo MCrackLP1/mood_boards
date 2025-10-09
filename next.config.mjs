@@ -1,6 +1,10 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-    output: 'standalone',
+    // Removed 'output: standalone' - not needed for Vercel
+    images: {
+        remotePatterns: [],
+        dangerouslyAllowSVG: true,
+    },
 };
 
 export default nextConfig;
