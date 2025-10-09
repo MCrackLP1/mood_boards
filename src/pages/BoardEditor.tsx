@@ -189,8 +189,9 @@ export function BoardEditor({ boardId, onBack, onShare }: BoardEditorProps) {
             await Promise.all(
               batch.map(async (imageUrl) => {
                 try {
-                  // Pinterest images can usually be loaded directly (no CORS issues for pinimg.com)
-                  const response = await fetch(imageUrl);
+                  // Use image proxy to avoid CORS issues
+                  const proxyUrl = `/api/image-proxy?url=${encodeURIComponent(imageUrl)}`;
+                  const response = await fetch(proxyUrl);
                   const blob = await response.blob();
                   const dataUrl = await new Promise<string>((resolve) => {
                     const reader = new FileReader();
@@ -239,8 +240,10 @@ export function BoardEditor({ boardId, onBack, onShare }: BoardEditorProps) {
         
         if (imageUrl) {
           try {
-            // Pinterest images from pinimg.com can be loaded directly (no CORS issues)
-            const response = await fetch(imageUrl);
+            // Use image proxy to avoid CORS issues
+            const proxyUrl = `/api/image-proxy?url=${encodeURIComponent(imageUrl)}`;
+            const response = await fetch(proxyUrl);
+            
             if (!response.ok) {
               throw new Error(`Failed to fetch image: ${response.status}`);
             }
