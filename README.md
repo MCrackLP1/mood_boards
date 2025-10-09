@@ -12,7 +12,7 @@ Eine minimalistische, private Moodboard-Webapp für Fotografen.
 ### Board-Editor
 - **Strukturierte Bereiche**: 3 feste Sections (✨ Beispielbilder, 📍 Location, 📋 Allgemein)
 - **Text & Bilder kombiniert**: Notizen und Bilder pro Section
-- **Mediathek**: Lokaler Speicher für eigene Bilder - einmal hochladen, überall verwenden
+- **Mediathek mit Ordnern**: Organisiere Bilder in Kategorien - 5 Standard-Ordner + eigene
 - **Web-Bildsuche**: Suche & Import von Bildern direkt aus Unsplash, Pexels & Pixabay
 - **Multi-Select**: Mehrere Bilder auf einmal auswählen und hinzufügen
 - **Automatische Farbextraktion**: 5-8 dominante Farben pro Bild

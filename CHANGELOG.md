@@ -2,6 +2,35 @@
 
 Alle wichtigen Änderungen an diesem Projekt werden in dieser Datei dokumentiert.
 
+## [1.6.0] - 2024-10-09
+
+### ✨ Neue Features - Ordner-System für Mediathek
+
+#### Ordner-Organisation 📁
+- **Ordner erstellen**: Eigene Kategorien für Bilder anlegen
+- **5 Standard-Ordner**: Logos & Branding, Portraits, Locations, Hochzeiten, Produkte
+- **Sidebar-Navigation**: Klare Ordner-Übersicht links
+- **Automatische Migration**: Bestehende Bilder → "Nicht kategorisiert"
+- **Ordner löschen**: Bilder werden automatisch verschoben
+- **Upload in Ordner**: Bilder landen direkt im aktuellen Ordner
+
+#### UI-Verbesserungen 🎨
+- **Zwei-Spalten-Layout**: Sidebar + Hauptbereich
+- **Aktiver Ordner**: Schwarz hervorgehoben
+- **Ordner-Icons**: Visuelle Unterscheidung (🏷️ 👤 📍 💍 📦)
+- **Inline-Ordner-Erstellung**: Schnell neue Ordner mit ➕
+- **Hover-Delete**: 🗑️ Button pro Ordner (außer Standard)
+
+### 📊 Performance
+- Bundle-Size: +1.45 KB (gzip)
+- IndexedDB Version 4 Migration (automatisch)
+- Effiziente Folder-Queries
+
+### 🔄 Migration
+- Neue Tabelle: `libraryFolders`
+- Bestehende Assets: → "Nicht kategorisiert" Ordner
+- 5 Default-Ordner werden automatisch erstellt
+
 ## [1.4.0] - 2024-10-09
 
 ### ✨ Neue Features
