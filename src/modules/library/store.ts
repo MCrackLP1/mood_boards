@@ -1,11 +1,13 @@
 /**
  * Asset Library Store
- * Manages user's personal image library with backend sync
+ * Manages user's personal image library with Supabase cloud sync + IndexedDB fallback
  */
 
 import { create } from 'zustand';
 import { LibraryAsset } from './types';
-import { assetsApi } from '@/modules/api/client';
+import { db } from '@/modules/database/db';
+import { supabase } from '@/modules/database/supabase';
+import { nanoid } from '@/modules/utils/id';
 import { extractColors } from '@/modules/assets/colorExtraction';
 
 interface LibraryStore {
@@ -26,12 +28,54 @@ export const useLibraryStore = create<LibraryStore>((set, get) => ({
   loadAssets: async (folderId?: string) => {
     set({ isLoading: true });
     try {
-      const assets = await assetsApi.getAll(folderId);
+      // Load from Supabase
+      let query = supabase
+        .from('library_assets')
+        .select('*')
+        .order('uploaded_at', { ascending: false });
+
+      if (folderId) {
+        query = query.eq('folder_id', folderId);
+      }
+
+      const { data: supabaseAssets, error } = await query;
+
+      if (error) throw error;
+
+      // Transform to camelCase
+      const assets: LibraryAsset[] = supabaseAssets?.map(a => ({
+        id: a.id,
+        folderId: a.folder_id,
+        name: a.name,
+        src: a.src,
+        thumbnailSrc: a.thumbnail_src || undefined,
+        palette: a.palette as any,
+        width: a.width,
+        height: a.height,
+        fileSize: a.file_size,
+        uploadedAt: a.uploaded_at,
+        tags: a.tags || undefined,
+      })) || [];
+
+      // Sync to IndexedDB
+      if (folderId) {
+        await db.libraryAssets.where('folderId').equals(folderId).delete();
+        await db.libraryAssets.bulkAdd(assets);
+      } else {
+        await db.libraryAssets.clear();
+        await db.libraryAssets.bulkAdd(assets);
+      }
+
       set({ assets, isLoading: false });
     } catch (error) {
-      console.error('Failed to load assets:', error);
-      set({ isLoading: false });
-      throw error;
+      console.error('Failed to load assets from Supabase, falling back to IndexedDB:', error);
+      let assets: LibraryAsset[];
+      if (folderId) {
+        assets = await db.libraryAssets.where('folderId').equals(folderId).reverse().sortBy('uploadedAt');
+      } else {
+        assets = await db.libraryAssets.orderBy('uploadedAt').reverse().toArray();
+      }
+      set({ assets, isLoading: false });
     }
   },
   
@@ -45,7 +89,8 @@ export const useLibraryStore = create<LibraryStore>((set, get) => ({
     // Extract color palette
     const palette = await extractColors(dataUrl);
     
-    const asset = await assetsApi.create({
+    const asset: LibraryAsset = {
+      id: nanoid(),
       folderId,
       name: file.name,
       src: dataUrl,
@@ -53,7 +98,32 @@ export const useLibraryStore = create<LibraryStore>((set, get) => ({
       width: img.width,
       height: img.height,
       fileSize: file.size,
-    });
+      uploadedAt: Date.now(),
+    };
+    
+    // Save to Supabase
+    try {
+      const { error } = await supabase.from('library_assets').insert({
+        id: asset.id,
+        folder_id: asset.folderId,
+        name: asset.name,
+        src: asset.src,
+        thumbnail_src: asset.thumbnailSrc,
+        palette: asset.palette as any,
+        width: asset.width,
+        height: asset.height,
+        file_size: asset.fileSize,
+        uploaded_at: asset.uploadedAt,
+        tags: asset.tags,
+      });
+
+      if (error) throw error;
+    } catch (error) {
+      console.error('Failed to save asset to Supabase:', error);
+    }
+
+    // Save to IndexedDB
+    await db.libraryAssets.add(asset);
     
     // Update store
     set({ assets: [asset, ...get().assets] });
@@ -62,16 +132,44 @@ export const useLibraryStore = create<LibraryStore>((set, get) => ({
   },
   
   deleteAsset: async (id: string) => {
-    await assetsApi.delete(id);
+    // Delete from Supabase
+    try {
+      const { error } = await supabase
+        .from('library_assets')
+        .delete()
+        .eq('id', id);
+
+      if (error) throw error;
+    } catch (error) {
+      console.error('Failed to delete asset from Supabase:', error);
+    }
+
+    // Delete from IndexedDB
+    await db.libraryAssets.delete(id);
     set({ assets: get().assets.filter(a => a.id !== id) });
   },
   
   getAsset: async (id: string) => {
-    return assetsApi.getById(id);
+    return db.libraryAssets.get(id);
   },
   
   moveAsset: async (assetId: string, targetFolderId: string) => {
-    const asset = await assetsApi.move(assetId, targetFolderId);
+    // Update Supabase
+    try {
+      const { error } = await supabase
+        .from('library_assets')
+        .update({ folder_id: targetFolderId })
+        .eq('id', assetId);
+
+      if (error) throw error;
+    } catch (error) {
+      console.error('Failed to move asset in Supabase:', error);
+    }
+
+    // Update IndexedDB
+    await db.libraryAssets.update(assetId, { folderId: targetFolderId });
+    const asset = await db.libraryAssets.get(assetId);
+    if (!asset) throw new Error('Asset not found');
     
     set({
       assets: get().assets.map(a => 

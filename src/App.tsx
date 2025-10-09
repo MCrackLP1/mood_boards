@@ -7,9 +7,10 @@ import { useState } from 'react';
 import { Home } from '@/pages/Home';
 import { BoardEditor } from '@/pages/BoardEditor';
 import { CustomerView } from '@/pages/CustomerView';
+import { MigrationHelper } from '@/pages/MigrationHelper';
 import './App.css';
 
-type View = 'home' | 'editor' | 'customer';
+type View = 'home' | 'editor' | 'customer' | 'migration';
 
 interface AppState {
   view: View;
@@ -20,7 +21,7 @@ function App() {
   const [state, setState] = useState<AppState>({ view: 'home' });
   
   // Simple routing based on URL hash
-  // Format: #/board/{id} or #/view/{id}
+  // Format: #/board/{id} or #/view/{id} or #/migrate
   useState(() => {
     const handleHashChange = () => {
       const hash = window.location.hash;
@@ -31,6 +32,8 @@ function App() {
       } else if (hash.startsWith('#/view/')) {
         const id = hash.replace('#/view/', '');
         setState({ view: 'customer', boardId: id });
+      } else if (hash === '#/migrate') {
+        setState({ view: 'migration' });
       } else {
         setState({ view: 'home' });
       }
@@ -75,6 +78,10 @@ function App() {
   
   if (state.view === 'customer' && state.boardId) {
     return <CustomerView boardId={state.boardId} />;
+  }
+
+  if (state.view === 'migration') {
+    return <MigrationHelper />;
   }
   
   return <Home onOpenBoard={navigateToBoard} />;

@@ -1,10 +1,12 @@
 /**
- * Folder Store for asset library organization with backend sync
+ * Folder Store for asset library organization with Supabase cloud sync + IndexedDB fallback
  */
 
 import { create } from 'zustand';
 import { LibraryFolder, DEFAULT_FOLDERS } from './folderTypes';
-import { foldersApi } from '@/modules/api/client';
+import { db } from '@/modules/database/db';
+import { supabase } from '@/modules/database/supabase';
+import { nanoid } from '@/modules/utils/id';
 
 interface FolderStore {
   folders: LibraryFolder[];
@@ -24,47 +26,163 @@ export const useFolderStore = create<FolderStore>((set, get) => ({
   loadFolders: async () => {
     set({ isLoading: true });
     try {
-      const folders = await foldersApi.getAll();
+      // Load from Supabase
+      const { data: supabaseFolders, error } = await supabase
+        .from('library_folders')
+        .select('*')
+        .order('order', { ascending: true });
+
+      if (error) throw error;
+
+      // Transform to camelCase
+      const folders: LibraryFolder[] = supabaseFolders?.map(f => ({
+        id: f.id,
+        name: f.name,
+        icon: f.icon,
+        order: f.order,
+        createdAt: f.created_at,
+      })) || [];
+
+      // Initialize default folders if none exist (except uncategorized)
+      if (folders.filter(f => f.id !== 'uncategorized').length === 0) {
+        await get().initializeDefaultFolders();
+        // Reload from Supabase after initialization
+        const { data: updatedFolders } = await supabase
+          .from('library_folders')
+          .select('*')
+          .order('order', { ascending: true });
+        
+        const transformedFolders = updatedFolders?.map(f => ({
+          id: f.id,
+          name: f.name,
+          icon: f.icon,
+          order: f.order,
+          createdAt: f.created_at,
+        })) || [];
+
+        // Sync to IndexedDB
+        await db.libraryFolders.clear();
+        await db.libraryFolders.bulkAdd(transformedFolders);
+
+        set({ folders: transformedFolders, isLoading: false });
+      } else {
+        // Sync to IndexedDB
+        await db.libraryFolders.clear();
+        await db.libraryFolders.bulkAdd(folders);
+
+        set({ folders, isLoading: false });
+      }
+    } catch (error) {
+      console.error('Failed to load folders from Supabase, falling back to IndexedDB:', error);
+      const folders = await db.libraryFolders.orderBy('order').toArray();
       
       // Initialize default folders if none exist (except uncategorized)
       if (folders.filter(f => f.id !== 'uncategorized').length === 0) {
         await get().initializeDefaultFolders();
-        const updatedFolders = await foldersApi.getAll();
+        const updatedFolders = await db.libraryFolders.orderBy('order').toArray();
         set({ folders: updatedFolders, isLoading: false });
       } else {
         set({ folders, isLoading: false });
       }
-    } catch (error) {
-      console.error('Failed to load folders:', error);
-      set({ isLoading: false });
-      throw error;
     }
   },
   
   initializeDefaultFolders: async () => {
-    const existingFolders = await foldersApi.getAll();
-    const existingIds = new Set(existingFolders.map(f => f.id));
+    // Check existing folders in Supabase
+    const { data: existingFolders } = await supabase
+      .from('library_folders')
+      .select('id');
     
-    for (const defaultFolder of DEFAULT_FOLDERS) {
-      // Skip if already exists
+    const existingIds = new Set((existingFolders || []).map(f => f.id));
+    
+    for (let i = 0; i < DEFAULT_FOLDERS.length; i++) {
+      const defaultFolder = DEFAULT_FOLDERS[i];
       const folderId = `default-${defaultFolder.name.toLowerCase().replace(/\s+/g, '-')}`;
+      
+      // Skip if already exists
       if (existingIds.has(folderId)) continue;
       
-      await foldersApi.create({
+      const folder: LibraryFolder = {
+        id: folderId,
         name: defaultFolder.name,
         icon: defaultFolder.icon,
-      });
+        order: i + 1, // Start at 1 since uncategorized is 0
+        createdAt: Date.now(),
+      };
+      
+      // Save to Supabase
+      try {
+        const { error } = await supabase.from('library_folders').insert({
+          id: folder.id,
+          name: folder.name,
+          icon: folder.icon,
+          order: folder.order,
+          created_at: folder.createdAt,
+        });
+
+        if (error) throw error;
+      } catch (error) {
+        console.error('Failed to save folder to Supabase:', error);
+      }
+
+      // Save to IndexedDB
+      await db.libraryFolders.add(folder);
     }
   },
   
   createFolder: async (name: string, icon = '📁') => {
-    const folder = await foldersApi.create({ name, icon });
+    const maxOrder = Math.max(0, ...get().folders.map(f => f.order));
+    const folder: LibraryFolder = {
+      id: nanoid(),
+      name,
+      icon,
+      order: maxOrder + 1,
+      createdAt: Date.now(),
+    };
+
+    // Save to Supabase
+    try {
+      const { error } = await supabase.from('library_folders').insert({
+        id: folder.id,
+        name: folder.name,
+        icon: folder.icon,
+        order: folder.order,
+        created_at: folder.createdAt,
+      });
+
+      if (error) throw error;
+    } catch (error) {
+      console.error('Failed to save folder to Supabase:', error);
+    }
+
+    // Save to IndexedDB
+    await db.libraryFolders.add(folder);
     set({ folders: [...get().folders, folder].sort((a, b) => a.order - b.order) });
     return folder;
   },
   
   updateFolder: async (id: string, updates: Partial<LibraryFolder>) => {
-    const folder = await foldersApi.update(id, updates);
+    // Update Supabase
+    try {
+      const supabaseUpdates: any = {};
+      if (updates.name) supabaseUpdates.name = updates.name;
+      if (updates.icon) supabaseUpdates.icon = updates.icon;
+      if (updates.order !== undefined) supabaseUpdates.order = updates.order;
+
+      const { error } = await supabase
+        .from('library_folders')
+        .update(supabaseUpdates)
+        .eq('id', id);
+
+      if (error) throw error;
+    } catch (error) {
+      console.error('Failed to update folder in Supabase:', error);
+    }
+
+    // Update IndexedDB
+    await db.libraryFolders.update(id, updates);
+    const folder = await db.libraryFolders.get(id);
+    if (!folder) throw new Error('Folder not found');
     
     set({
       folders: get().folders.map(f => f.id === id ? folder : f),
@@ -78,7 +196,35 @@ export const useFolderStore = create<FolderStore>((set, get) => ({
       return;
     }
     
-    await foldersApi.delete(id);
+    // Move all assets in this folder to uncategorized in Supabase
+    try {
+      const { error } = await supabase
+        .from('library_assets')
+        .update({ folder_id: 'uncategorized' })
+        .eq('folder_id', id);
+
+      if (error) throw error;
+    } catch (error) {
+      console.error('Failed to move assets in Supabase:', error);
+    }
+
+    // Move in IndexedDB
+    await db.libraryAssets.where('folderId').equals(id).modify({ folderId: 'uncategorized' });
+    
+    // Delete from Supabase
+    try {
+      const { error } = await supabase
+        .from('library_folders')
+        .delete()
+        .eq('id', id);
+
+      if (error) throw error;
+    } catch (error) {
+      console.error('Failed to delete folder from Supabase:', error);
+    }
+
+    // Delete from IndexedDB
+    await db.libraryFolders.delete(id);
     set({ folders: get().folders.filter(f => f.id !== id) });
   },
 }));
