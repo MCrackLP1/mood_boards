@@ -6,6 +6,7 @@ import { useEffect, useState, useRef } from 'react';
 import { useBoardStore } from '@/modules/boards/store';
 import { ImageCard } from '@/components/ImageCard';
 import { ImageLightbox } from '@/components/ImageLightbox';
+import { ImageSearch } from '@/components/ImageSearch';
 import { ColorPalette } from '@/components/ColorPalette';
 import { KeyboardHelp } from '@/components/KeyboardHelp';
 import { Button } from '@/modules/ui/Button';
@@ -13,8 +14,10 @@ import { Input } from '@/modules/ui/Input';
 import { Modal } from '@/modules/ui/Modal';
 import { SmoothScroller } from '@/components/SmoothScroller';
 import { processImageFile } from '@/modules/assets/imageUpload';
+import { extractColors } from '@/modules/assets/colorExtraction';
 import { hasSimilarColor } from '@/modules/assets/colorExtraction';
 import { Color, BoardItem } from '@/types';
+import { ImageSearchResult } from '@/modules/images/providers/base';
 import styles from './BoardEditor.module.css';
 
 interface BoardEditorProps {
@@ -31,6 +34,7 @@ export function BoardEditor({ boardId, onBack, onShare }: BoardEditorProps) {
   const [boardTitle, setBoardTitle] = useState('');
   const [welcomeText, setWelcomeText] = useState('');
   const [lightboxItem, setLightboxItem] = useState<BoardItem | null>(null);
+  const [isImageSearchOpen, setIsImageSearchOpen] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   
   useEffect(() => {
@@ -83,6 +87,30 @@ export function BoardEditor({ boardId, onBack, onShare }: BoardEditorProps) {
       welcomeText,
     });
     setIsSettingsOpen(false);
+  };
+  
+  const handleImageSearchSelect = async (dataUrl: string, result: ImageSearchResult) => {
+    setIsUploading(true);
+    
+    try {
+      // Extract colors from the image
+      const palette = await extractColors(dataUrl);
+      
+      await addItem(boardId, {
+        type: 'image',
+        src: dataUrl,
+        palette,
+        meta: {
+          label: result.photographer ? `By ${result.photographer}` : undefined,
+          description: `From ${result.source}`,
+        },
+      });
+    } catch (error) {
+      console.error('Error adding image:', error);
+      alert('Fehler beim Hinzufügen des Bildes');
+    } finally {
+      setIsUploading(false);
+    }
   };
   
   const imageItems = currentItems.filter(item => item.type === 'image');
@@ -185,9 +213,18 @@ export function BoardEditor({ boardId, onBack, onShare }: BoardEditorProps) {
           
           <div className={styles.uploadContent}>
             <p>Bilder hier ablegen oder</p>
-            <Button onClick={() => fileInputRef.current?.click()} disabled={isUploading}>
-              {isUploading ? 'Lädt...' : 'Bilder auswählen'}
-            </Button>
+            <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', justifyContent: 'center' }}>
+              <Button onClick={() => fileInputRef.current?.click()} disabled={isUploading}>
+                {isUploading ? 'Lädt...' : '📁 Eigene Bilder'}
+              </Button>
+              <Button 
+                variant="secondary" 
+                onClick={() => setIsImageSearchOpen(true)}
+                disabled={isUploading}
+              >
+                🔍 Web-Suche
+              </Button>
+            </div>
           </div>
         </div>
         
@@ -278,6 +315,13 @@ export function BoardEditor({ boardId, onBack, onShare }: BoardEditorProps) {
           onClose={() => setLightboxItem(null)}
           onNext={imageItems.length > 1 ? handleLightboxNext : undefined}
           onPrev={imageItems.length > 1 ? handleLightboxPrev : undefined}
+        />
+      )}
+      
+      {isImageSearchOpen && (
+        <ImageSearch
+          onImageSelect={handleImageSearchSelect}
+          onClose={() => setIsImageSearchOpen(false)}
         />
       )}
       
