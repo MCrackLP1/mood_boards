@@ -5,14 +5,16 @@
 import { useEffect, useState, useRef } from 'react';
 import { useBoardStore } from '@/modules/boards/store';
 import { ImageCard } from '@/components/ImageCard';
+import { ImageLightbox } from '@/components/ImageLightbox';
 import { ColorPalette } from '@/components/ColorPalette';
+import { KeyboardHelp } from '@/components/KeyboardHelp';
 import { Button } from '@/modules/ui/Button';
 import { Input } from '@/modules/ui/Input';
 import { Modal } from '@/modules/ui/Modal';
 import { SmoothScroller } from '@/components/SmoothScroller';
 import { processImageFile } from '@/modules/assets/imageUpload';
 import { hasSimilarColor } from '@/modules/assets/colorExtraction';
-import { Color } from '@/types';
+import { Color, BoardItem } from '@/types';
 import styles from './BoardEditor.module.css';
 
 interface BoardEditorProps {
@@ -22,12 +24,13 @@ interface BoardEditorProps {
 }
 
 export function BoardEditor({ boardId, onBack, onShare }: BoardEditorProps) {
-  const { currentBoard, currentItems, selectBoard, updateBoard, addItem, deleteItem } = useBoardStore();
+  const { currentBoard, currentItems, selectBoard, updateBoard, addItem, updateItem, deleteItem } = useBoardStore();
   const [selectedColor, setSelectedColor] = useState<Color | undefined>();
   const [isUploading, setIsUploading] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [boardTitle, setBoardTitle] = useState('');
   const [welcomeText, setWelcomeText] = useState('');
+  const [lightboxItem, setLightboxItem] = useState<BoardItem | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   
   useEffect(() => {
@@ -100,6 +103,24 @@ export function BoardEditor({ boardId, onBack, onShare }: BoardEditorProps) {
   const highlightedItems = selectedColor
     ? imageItems.filter(item => hasSimilarColor(item.palette, selectedColor))
     : [];
+  
+  const handleImageClick = (item: BoardItem) => {
+    setLightboxItem(item);
+  };
+  
+  const handleLightboxNext = () => {
+    if (!lightboxItem) return;
+    const currentIndex = imageItems.findIndex(i => i.id === lightboxItem.id);
+    const nextIndex = (currentIndex + 1) % imageItems.length;
+    setLightboxItem(imageItems[nextIndex]);
+  };
+  
+  const handleLightboxPrev = () => {
+    if (!lightboxItem) return;
+    const currentIndex = imageItems.findIndex(i => i.id === lightboxItem.id);
+    const prevIndex = (currentIndex - 1 + imageItems.length) % imageItems.length;
+    setLightboxItem(imageItems[prevIndex]);
+  };
   
   if (!currentBoard) {
     return <div className={styles.loading}>Lade Board...</div>;
@@ -174,12 +195,43 @@ export function BoardEditor({ boardId, onBack, onShare }: BoardEditorProps) {
           <SmoothScroller>
             <div className={styles.grid}>
               {imageItems.map(item => (
-                <ImageCard
-                  key={item.id}
-                  item={item}
-                  isHighlighted={selectedColor ? highlightedItems.includes(item) : false}
-                  onDelete={() => deleteItem(item.id)}
-                />
+                <div key={item.id} style={{ position: 'relative' }}>
+                  <ImageCard
+                    item={item}
+                    isHighlighted={selectedColor ? highlightedItems.includes(item) : false}
+                    onClick={() => handleImageClick(item)}
+                    onDelete={() => deleteItem(item.id)}
+                  />
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      const label = prompt('Label für dieses Bild:', item.meta?.label || '');
+                      if (label !== null) {
+                        updateItem(item.id, {
+                          meta: { ...item.meta, label: label || undefined }
+                        });
+                      }
+                    }}
+                    style={{
+                      position: 'absolute',
+                      bottom: '0.5rem',
+                      left: '0.5rem',
+                      background: 'rgba(0, 0, 0, 0.7)',
+                      color: '#fff',
+                      border: 'none',
+                      borderRadius: '0.25rem',
+                      padding: '0.25rem 0.5rem',
+                      fontSize: '0.75rem',
+                      cursor: 'pointer',
+                      opacity: 0.7,
+                      transition: 'opacity 0.2s'
+                    }}
+                    onMouseEnter={(e) => e.currentTarget.style.opacity = '1'}
+                    onMouseLeave={(e) => e.currentTarget.style.opacity = '0.7'}
+                  >
+                    {item.meta?.label ? '✏️' : '📝'} Label
+                  </button>
+                </div>
               ))}
             </div>
           </SmoothScroller>
@@ -219,6 +271,17 @@ export function BoardEditor({ boardId, onBack, onShare }: BoardEditorProps) {
           </div>
         </div>
       </Modal>
+      
+      {lightboxItem && (
+        <ImageLightbox
+          item={lightboxItem}
+          onClose={() => setLightboxItem(null)}
+          onNext={imageItems.length > 1 ? handleLightboxNext : undefined}
+          onPrev={imageItems.length > 1 ? handleLightboxPrev : undefined}
+        />
+      )}
+      
+      <KeyboardHelp />
     </div>
   );
 }

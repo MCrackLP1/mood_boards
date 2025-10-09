@@ -4,6 +4,7 @@
 
 import { BoardItem } from '@/types';
 import { Card } from '@/modules/ui/Card';
+import { LazyImage } from './LazyImage';
 import styles from './ImageCard.module.css';
 
 interface ImageCardProps {
@@ -20,7 +21,11 @@ export function ImageCard({ item, isHighlighted, onClick, onDelete }: ImageCardP
       onClick={onClick}
     >
       <div className={styles.imageWrapper}>
-        <img src={item.src} alt={item.meta?.label || 'Board image'} className={styles.image} />
+        <LazyImage 
+          src={item.src!} 
+          alt={item.meta?.label || 'Board image'} 
+          className={styles.image}
+        />
         
         {onDelete && (
           <button 

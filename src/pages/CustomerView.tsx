@@ -8,11 +8,13 @@ import { Board, BoardItem } from '@/types';
 import { WelcomeAnimation } from '@/components/WelcomeAnimation';
 import { BrandingSignature } from '@/components/BrandingSignature';
 import { ImageCard } from '@/components/ImageCard';
+import { ImageLightbox } from '@/components/ImageLightbox';
 import { SmoothScroller } from '@/components/SmoothScroller';
 import { Button } from '@/modules/ui/Button';
 import { Input } from '@/modules/ui/Input';
 import { audioManager } from '@/modules/audio/audioManager';
 import { verifyPassword } from '@/modules/utils/hash';
+import { updateMetaTags } from '@/modules/utils/meta';
 import styles from './CustomerView.module.css';
 
 interface CustomerViewProps {
@@ -29,6 +31,7 @@ export function CustomerView({ boardId }: CustomerViewProps) {
   const [isUnlocked, setIsUnlocked] = useState(false);
   const [isAudioPlaying, setIsAudioPlaying] = useState(false);
   const [audioVolume, setAudioVolume] = useState(0.2);
+  const [lightboxItem, setLightboxItem] = useState<BoardItem | null>(null);
   
   useEffect(() => {
     loadBoard();
@@ -61,6 +64,16 @@ export function CustomerView({ boardId }: CustomerViewProps) {
       .sortBy('order');
     
     setItems(loadedItems);
+    
+    // Update meta tags for SEO
+    if (board) {
+      const firstImage = loadedItems.find(item => item.type === 'image' && item.src);
+      updateMetaTags({
+        title: `${board.title} | Moodboard by Mark Tietz Fotografie`,
+        description: board.welcomeText || `Entdecke das Moodboard "${board.title}"`,
+        image: firstImage?.src,
+      });
+    }
   };
   
   const handlePasswordSubmit = async () => {
@@ -94,6 +107,26 @@ export function CustomerView({ boardId }: CustomerViewProps) {
   const handleVolumeChange = (volume: number) => {
     setAudioVolume(volume);
     audioManager.setVolume(volume);
+  };
+  
+  const handleImageClick = (item: BoardItem) => {
+    setLightboxItem(item);
+  };
+  
+  const handleLightboxNext = () => {
+    if (!lightboxItem || !items) return;
+    const imageItems = items.filter(i => i.type === 'image');
+    const currentIndex = imageItems.findIndex(i => i.id === lightboxItem.id);
+    const nextIndex = (currentIndex + 1) % imageItems.length;
+    setLightboxItem(imageItems[nextIndex]);
+  };
+  
+  const handleLightboxPrev = () => {
+    if (!lightboxItem || !items) return;
+    const imageItems = items.filter(i => i.type === 'image');
+    const currentIndex = imageItems.findIndex(i => i.id === lightboxItem.id);
+    const prevIndex = (currentIndex - 1 + imageItems.length) % imageItems.length;
+    setLightboxItem(imageItems[prevIndex]);
   };
   
   if (!board) {
@@ -174,7 +207,11 @@ export function CustomerView({ boardId }: CustomerViewProps) {
           <SmoothScroller>
             <div className={styles.grid}>
               {imageItems.map(item => (
-                <ImageCard key={item.id} item={item} />
+                <ImageCard 
+                  key={item.id} 
+                  item={item}
+                  onClick={() => handleImageClick(item)}
+                />
               ))}
             </div>
           </SmoothScroller>
@@ -184,6 +221,15 @@ export function CustomerView({ boardId }: CustomerViewProps) {
           </div>
         )}
       </div>
+      
+      {lightboxItem && (
+        <ImageLightbox
+          item={lightboxItem}
+          onClose={() => setLightboxItem(null)}
+          onNext={imageItems.length > 1 ? handleLightboxNext : undefined}
+          onPrev={imageItems.length > 1 ? handleLightboxPrev : undefined}
+        />
+      )}
     </div>
   );
 }
