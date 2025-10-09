@@ -7,6 +7,7 @@ import { useBoardStore } from '@/modules/boards/store';
 import { ImageCard } from '@/components/ImageCard';
 import { ImageLightbox } from '@/components/ImageLightbox';
 import { ImageSearch } from '@/components/ImageSearch';
+import { AssetLibrary } from '@/components/AssetLibrary';
 import { ColorPalette } from '@/components/ColorPalette';
 import { KeyboardHelp } from '@/components/KeyboardHelp';
 import { Button } from '@/modules/ui/Button';
@@ -18,6 +19,7 @@ import { extractColors } from '@/modules/assets/colorExtraction';
 import { hasSimilarColor } from '@/modules/assets/colorExtraction';
 import { Color, BoardItem } from '@/types';
 import { ImageSearchResult } from '@/modules/images/providers/base';
+import { LibraryAsset } from '@/modules/library/types';
 import styles from './BoardEditor.module.css';
 
 interface BoardEditorProps {
@@ -35,6 +37,7 @@ export function BoardEditor({ boardId, onBack, onShare }: BoardEditorProps) {
   const [welcomeText, setWelcomeText] = useState('');
   const [lightboxItem, setLightboxItem] = useState<BoardItem | null>(null);
   const [isImageSearchOpen, setIsImageSearchOpen] = useState(false);
+  const [isLibraryOpen, setIsLibraryOpen] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   
   useEffect(() => {
@@ -106,6 +109,29 @@ export function BoardEditor({ boardId, onBack, onShare }: BoardEditorProps) {
     } catch (error) {
       console.error('Error adding image:', error);
       throw error; // Re-throw to handle in batch
+    }
+  };
+  
+  const handleLibrarySelect = async (assets: LibraryAsset[]) => {
+    setIsUploading(true);
+    
+    try {
+      for (const asset of assets) {
+        await addItem(boardId, {
+          type: 'image',
+          src: asset.src,
+          palette: asset.palette,
+          meta: {
+            label: asset.name,
+            description: 'Aus Mediathek',
+          },
+        });
+      }
+    } catch (error) {
+      console.error('Error adding from library:', error);
+      alert('Fehler beim Hinzufügen aus der Mediathek');
+    } finally {
+      setIsUploading(false);
     }
   };
   
@@ -215,6 +241,13 @@ export function BoardEditor({ boardId, onBack, onShare }: BoardEditorProps) {
               </Button>
               <Button 
                 variant="secondary" 
+                onClick={() => setIsLibraryOpen(true)}
+                disabled={isUploading}
+              >
+                📚 Mediathek
+              </Button>
+              <Button 
+                variant="secondary" 
                 onClick={() => setIsImageSearchOpen(true)}
                 disabled={isUploading}
               >
@@ -318,6 +351,13 @@ export function BoardEditor({ boardId, onBack, onShare }: BoardEditorProps) {
         <ImageSearch
           onImageSelect={handleImageSearchSelect}
           onClose={() => setIsImageSearchOpen(false)}
+        />
+      )}
+      
+      {isLibraryOpen && (
+        <AssetLibrary
+          onSelect={handleLibrarySelect}
+          onClose={() => setIsLibraryOpen(false)}
         />
       )}
       
