@@ -11,7 +11,9 @@ Eine minimalistische, private Moodboard-Webapp für Fotografen.
 
 ### Board-Editor
 - **Drag & Drop Upload**: Bilder per Drag & Drop oder Datei-Dialog hochladen
+- **📚 Mediathek**: Lokaler Speicher für eigene Bilder - einmal hochladen, überall verwenden
 - **Web-Bildsuche**: Suche & Import von Bildern direkt aus Unsplash, Pexels & Pixabay
+- **Multi-Select**: Mehrere Bilder auf einmal auswählen und hinzufügen
 - **Automatische Farbextraktion**: 5-8 dominante Farben pro Bild
 - **Farb-Filter**: Klick auf Farbe hebt Bilder mit ähnlicher Farbdominanz hervor
 - **Bild-Notizen**: Labels und Beschreibungen für jedes Bild

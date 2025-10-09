@@ -2,6 +2,31 @@
 
 Alle wichtigen Änderungen an diesem Projekt werden in dieser Datei dokumentiert.
 
+## [1.4.0] - 2024-10-09
+
+### ✨ Neue Features
+
+#### Asset-Bibliothek / Mediathek 📚
+- **Projektübergreifender Speicher**: Einmal hochladen, in allen Boards verwenden
+- **Lokale IndexedDB**: Bilder bleiben lokal gespeichert
+- **Multi-Select**: Mehrere Bilder aus Mediathek auf einmal hinzufügen
+- **Farbpaletten**: Automatisch gespeichert beim Upload
+- **Verwaltung**: Bilder direkt aus Mediathek löschen
+- **Meta-Informationen**: Dateiname, Größe, Auflösung anzeigen
+- **Performance**: Effiziente Speicherung mit Dexie.js
+- **UI**: Modales Grid-Layout ähnlich wie Bildsuche
+
+### 🎨 UX-Verbesserungen
+- Neuer "📚 Mediathek" Button im Upload-Bereich
+- Konsistentes Design mit Bildsuche
+- Hover-Delete-Button pro Bild
+- Statistik: "X Bilder in Mediathek"
+
+### 📊 Performance
+- Bundle-Size: +1.28 KB (gzip) für komplettes System
+- Effiziente IndexedDB-Queries
+- Version 2 Migration (automatisch)
+
 ## [1.3.0] - 2024-10-09
 
 ### ✨ Neue Features
