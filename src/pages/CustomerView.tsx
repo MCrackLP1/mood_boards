@@ -249,9 +249,9 @@ export function CustomerView({ boardId }: CustomerViewProps) {
           animate={isRevealed ? { opacity: 1, y: 0 } : false}
           transition={{ duration: 1, delay: 0.4, ease: [0.4, 0, 0.2, 1] }}
         >
-          {/* Hero Mood Zone - Shows ALL images or images from general */}
+          {/* Hero Mood Zone - Only shows images from 'general' section (Beispielbilder) */}
           <MoodHeroZone
-            items={imageItems}
+            items={getItemsBySection('general')}
             onImageClick={handleImageClick}
           />
 
@@ -260,7 +260,7 @@ export function CustomerView({ boardId }: CustomerViewProps) {
             <ColorStripeZone colors={uniqueColors} />
           )}
 
-          {/* Location Zone - Only show if there are specific location images */}
+          {/* Location Zone - Shows images from 'location' section */}
           {getItemsBySection('location').filter(i => i.type === 'image').length > 0 && (
             <LocationZone
               items={getItemsBySection('location')}
