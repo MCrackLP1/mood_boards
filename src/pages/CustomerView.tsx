@@ -212,13 +212,7 @@ export function CustomerView({ boardId }: CustomerViewProps) {
       
       <BrandingSignature visible={board.brandingEnabled} />
       
-      <motion.div 
-        className={styles.content}
-        initial={{ opacity: 0 }}
-        animate={{ opacity: isRevealed ? 1 : 0 }}
-        transition={{ duration: 0.8, delay: 0.4 }}
-        style={{ pointerEvents: isRevealed ? 'auto' : 'none' }}
-      >
+      <div className={styles.content} style={{ opacity: isRevealed ? 1 : 0 }}>
         <header className={styles.header}>
           <h1 className={styles.title}>{board.title}</h1>
           
@@ -251,9 +245,9 @@ export function CustomerView({ boardId }: CustomerViewProps) {
         
         <motion.div 
           className={styles.canvas}
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, delay: 0.6 }}
+          initial={isRevealed ? { opacity: 0, y: 30 } : false}
+          animate={isRevealed ? { opacity: 1, y: 0 } : false}
+          transition={{ duration: 1, delay: 0.4, ease: [0.4, 0, 0.2, 1] }}
         >
           {/* Hero Mood Zone - Shows ALL images or images from general */}
           <MoodHeroZone
@@ -295,7 +289,7 @@ export function CustomerView({ boardId }: CustomerViewProps) {
             <p>Dieses Board ist noch leer.</p>
           </div>
         )}
-      </motion.div>
+      </div>
       
       {lightboxItem && (
         <ImageLightbox

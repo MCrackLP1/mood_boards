@@ -17,6 +17,7 @@ interface CanvasRevealProps {
 export function CanvasReveal({ items, onReveal }: CanvasRevealProps) {
   const [scattered, setScattered] = useState(true);
   const [hasScrolled, setHasScrolled] = useState(false);
+  const [showOverlay, setShowOverlay] = useState(false);
   
   const imageItems = items.filter(i => i.type === 'image').slice(0, 15);
   
@@ -34,11 +35,14 @@ export function CanvasReveal({ items, onReveal }: CanvasRevealProps) {
   }, [hasScrolled]);
   
   const handleReveal = () => {
-    setScattered(false);
-    // Delay to allow exit animations to complete
+    // Start overlay immediately
+    setShowOverlay(true);
+    // Start exit animation after short delay
+    setTimeout(() => setScattered(false), 300);
+    // Complete reveal after animations
     setTimeout(() => {
       onReveal();
-    }, 1200); // Increased for smoother transition
+    }, 1000);
   };
   
   // Generate random positions for scattered state
@@ -56,14 +60,28 @@ export function CanvasReveal({ items, onReveal }: CanvasRevealProps) {
   };
   
   return (
-    <AnimatePresence>
-      {scattered && (
-        <motion.div
-          className={styles.container}
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-        >
+    <>
+      {/* Transition Overlay */}
+      <AnimatePresence>
+        {showOverlay && (
+          <motion.div
+            className={styles.overlay}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.5 }}
+          />
+        )}
+      </AnimatePresence>
+      
+      <AnimatePresence>
+        {scattered && (
+          <motion.div
+            className={styles.container}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+          >
           <div className={styles.scattered}>
             <motion.h2
               className={styles.title}
@@ -156,7 +174,8 @@ export function CanvasReveal({ items, onReveal }: CanvasRevealProps) {
           </div>
         </motion.div>
       )}
-    </AnimatePresence>
+      </AnimatePresence>
+    </>
   );
 }
 

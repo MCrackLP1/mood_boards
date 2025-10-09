@@ -56,6 +56,7 @@
   margin: 0 auto;
   padding: var(--spacing-2xl) var(--spacing-xl);
   position: relative;
+  transition: opacity 1s ease;
 }
 
 /* Header */
