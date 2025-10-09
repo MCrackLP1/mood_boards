@@ -15,6 +15,7 @@ import { Input } from '@/modules/ui/Input';
 import { audioManager } from '@/modules/audio/audioManager';
 import { verifyPassword } from '@/modules/utils/hash';
 import { updateMetaTags } from '@/modules/utils/meta';
+import { DEFAULT_SECTIONS, SectionType } from '@/types/sections';
 import styles from './CustomerView.module.css';
 
 interface CustomerViewProps {
@@ -161,6 +162,12 @@ export function CustomerView({ boardId }: CustomerViewProps) {
   
   const imageItems = items.filter(item => item.type === 'image');
   
+  const getItemsBySection = (sectionId: SectionType) => {
+    return items
+      .filter(item => (item.section || 'general') === sectionId)
+      .sort((a, b) => a.order - b.order);
+  };
+  
   return (
     <div className={styles.page}>
       {showWelcome && (
@@ -203,19 +210,53 @@ export function CustomerView({ boardId }: CustomerViewProps) {
           )}
         </header>
         
-        {imageItems.length > 0 ? (
-          <SmoothScroller>
-            <div className={styles.grid}>
-              {imageItems.map(item => (
-                <ImageCard 
-                  key={item.id} 
-                  item={item}
-                  onClick={() => handleImageClick(item)}
-                />
-              ))}
-            </div>
-          </SmoothScroller>
-        ) : (
+        <SmoothScroller>
+          {DEFAULT_SECTIONS.map(section => {
+            const sectionItems = getItemsBySection(section.id);
+            if (sectionItems.length === 0) return null;
+            
+            const sectionImageItems = sectionItems.filter(i => i.type === 'image');
+            const sectionNotes = sectionItems.filter(i => i.type === 'note');
+            
+            return (
+              <div key={section.id} className={styles.section}>
+                <div className={styles.sectionHeader}>
+                  <span className={styles.sectionIcon}>{section.icon}</span>
+                  <div>
+                    <h2 className={styles.sectionTitle}>{section.title}</h2>
+                    <p className={styles.sectionDescription}>{section.description}</p>
+                  </div>
+                </div>
+                
+                <div className={styles.sectionContent}>
+                  {sectionNotes.length > 0 && (
+                    <div className={styles.notes}>
+                      {sectionNotes.map(note => (
+                        <div key={note.id} className={styles.note}>
+                          <p>{note.text}</p>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                  
+                  {sectionImageItems.length > 0 && (
+                    <div className={styles.grid}>
+                      {sectionImageItems.map(item => (
+                        <ImageCard 
+                          key={item.id} 
+                          item={item}
+                          onClick={() => handleImageClick(item)}
+                        />
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+            );
+          })}
+        </SmoothScroller>
+        
+        {items.length === 0 && (
           <div className={styles.empty}>
             <p>Dieses Board ist noch leer.</p>
           </div>

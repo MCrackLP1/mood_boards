@@ -23,7 +23,8 @@ export interface BoardItem {
   id: string;
   boardId: string;
   type: 'image' | 'note';
-  order: number; // For sorting items
+  section?: 'inspiration' | 'location' | 'general'; // Section assignment
+  order: number; // For sorting items within section
   createdAt: number;
   
   // Image-specific fields

@@ -26,6 +26,20 @@ export class MoodboardDatabase extends Dexie {
       items: 'id, boardId, order, createdAt',
       libraryAssets: 'id, uploadedAt, name',
     });
+    
+    // Version 3: Add section to items
+    this.version(3).stores({
+      boards: 'id, createdAt, updatedAt',
+      items: 'id, boardId, section, order, createdAt',
+      libraryAssets: 'id, uploadedAt, name',
+    }).upgrade(trans => {
+      // Set default section for existing items
+      return trans.table('items').toCollection().modify(item => {
+        if (!item.section) {
+          item.section = 'general';
+        }
+      });
+    });
   }
 }
 
