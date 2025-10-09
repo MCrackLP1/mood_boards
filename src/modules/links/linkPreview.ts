@@ -18,8 +18,7 @@ function extractDomain(url: string): string {
 }
 
 /**
- * Fetches link preview using a CORS proxy
- * Uses LinkPreview API (free tier: 60 requests/hour)
+ * Fetches link preview using CORS proxies with fallback
  */
 export async function fetchLinkPreview(url: string): Promise<LinkPreview> {
   // Basic validation
@@ -29,52 +28,56 @@ export async function fetchLinkPreview(url: string): Promise<LinkPreview> {
 
   const domain = extractDomain(url);
 
-  try {
-    // Option 1: Use LinkPreview API (requires API key in production)
-    // For now, we'll use a simple fetch approach with CORS workaround
-    const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(url)}`;
-    
-    const response = await fetch(proxyUrl, {
-      method: 'GET',
-      headers: {
-        'Accept': 'application/json',
-      },
-    });
+  // Try multiple CORS proxies with fallback
+  const proxies = [
+    `https://corsproxy.io/?${encodeURIComponent(url)}`,
+    `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(url)}`,
+  ];
 
-    if (!response.ok) {
-      throw new Error('Failed to fetch preview');
+  for (const proxyUrl of proxies) {
+    try {
+      const response = await fetch(proxyUrl, {
+        signal: AbortSignal.timeout(5000) // 5 second timeout
+      });
+
+      if (!response.ok) {
+        console.warn(`Proxy ${proxyUrl} returned ${response.status}`);
+        continue;
+      }
+
+      const html = await response.text();
+
+      // Parse Open Graph tags
+      const ogTitle = extractMetaTag(html, 'og:title') || extractMetaTag(html, 'twitter:title');
+      const ogDescription = extractMetaTag(html, 'og:description') || extractMetaTag(html, 'twitter:description');
+      const ogImage = extractMetaTag(html, 'og:image') || extractMetaTag(html, 'twitter:image');
+      
+      // Fallback to HTML title if no OG title
+      const title = ogTitle || extractTitle(html) || domain;
+      const description = ogDescription || '';
+      const image = ogImage || getFallbackIcon(domain);
+
+      return {
+        title,
+        description,
+        image,
+        domain,
+      };
+    } catch (error) {
+      console.warn(`Proxy ${proxyUrl} failed:`, error);
+      continue;
     }
-
-    const data = await response.json();
-    const html = data.contents;
-
-    // Parse Open Graph tags
-    const ogTitle = extractMetaTag(html, 'og:title') || extractMetaTag(html, 'twitter:title');
-    const ogDescription = extractMetaTag(html, 'og:description') || extractMetaTag(html, 'twitter:description');
-    const ogImage = extractMetaTag(html, 'og:image') || extractMetaTag(html, 'twitter:image');
-    
-    // Fallback to HTML title if no OG title
-    const title = ogTitle || extractTitle(html) || domain;
-    const description = ogDescription || '';
-    const image = ogImage || getFallbackIcon(domain);
-
-    return {
-      title,
-      description,
-      image,
-      domain,
-    };
-  } catch (error) {
-    console.error('Failed to fetch link preview:', error);
-    
-    // Return fallback preview
-    return {
-      title: domain,
-      description: url,
-      image: getFallbackIcon(domain),
-      domain,
-    };
   }
+
+  console.error('All proxies failed for link preview');
+  
+  // Return fallback preview
+  return {
+    title: domain,
+    description: url,
+    image: getFallbackIcon(domain),
+    domain,
+  };
 }
 
 /**
@@ -100,6 +103,7 @@ function extractTitle(html: string): string | null {
 function getFallbackIcon(domain: string): string {
   const icons: Record<string, string> = {
     'pinterest.com': '📌',
+    'pin.it': '📌',
     'instagram.com': '📷',
     'youtube.com': '🎥',
     'vimeo.com': '🎬',
@@ -118,7 +122,7 @@ function getFallbackIcon(domain: string): string {
 export function detectPlatform(url: string): string | null {
   const domain = extractDomain(url);
   
-  if (domain.includes('pinterest')) return 'Pinterest';
+  if (domain.includes('pinterest') || domain.includes('pin.it')) return 'Pinterest';
   if (domain.includes('instagram')) return 'Instagram';
   if (domain.includes('youtube')) return 'YouTube';
   if (domain.includes('vimeo')) return 'Vimeo';
@@ -223,7 +227,7 @@ export async function extractPinterestImage(url: string): Promise<string | null>
  * Check if URL is a Pinterest URL
  */
 export function isPinterestUrl(url: string): boolean {
-  return url.includes('pinterest.com') || url.includes('pinimg.com');
+  return url.includes('pinterest.com') || url.includes('pinimg.com') || url.includes('pin.it');
 }
 
 /**
