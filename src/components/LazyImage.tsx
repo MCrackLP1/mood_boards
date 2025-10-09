@@ -53,3 +53,4 @@ export function LazyImage({ src, alt, className, onClick }: LazyImageProps) {
   );
 }
 
+

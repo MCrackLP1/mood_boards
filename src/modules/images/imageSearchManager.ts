@@ -67,3 +67,4 @@ class ImageSearchManager {
 
 export const imageSearchManager = new ImageSearchManager();
 
+

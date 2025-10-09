@@ -67,3 +67,4 @@ export function getBoardPreviewImage(items: any[]): string | undefined {
   return firstImage?.src;
 }
 
+

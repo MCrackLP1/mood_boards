@@ -18,3 +18,4 @@ export const DEFAULT_FOLDERS: Omit<LibraryFolder, 'id' | 'createdAt'>[] = [
   { name: 'Produkte', icon: '📦', order: 4 },
 ];
 
+

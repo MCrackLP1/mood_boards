@@ -57,3 +57,4 @@ export function BoardCard({ board, previewImage, onOpen, onDuplicate, onDelete }
   );
 }
 
+

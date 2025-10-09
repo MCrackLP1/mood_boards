@@ -144,3 +144,4 @@ export function hasSimilarColor(
   return palette.some(color => colorSimilarity(color, targetColor) >= threshold);
 }
 
+

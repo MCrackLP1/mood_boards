@@ -1,0 +1,22 @@
+# Server-specific gitignore
+
+# Database and data
+data/
+*.db
+*.db-journal
+
+# Dependencies
+node_modules/
+
+# Logs
+*.log
+npm-debug.log*
+
+# Environment
+.env
+.env.local
+
+# OS
+.DS_Store
+Thumbs.db
+

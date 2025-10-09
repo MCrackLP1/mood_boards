@@ -1,0 +1,183 @@
+╔═══════════════════════════════════════════════════════════════════╗
+║                                                                   ║
+║               MOODBOARD SERVER - SCHNELLSTART                     ║
+║                                                                   ║
+║  Diese Datei zeigt dir die wichtigsten Befehle                   ║
+║                                                                   ║
+╚═══════════════════════════════════════════════════════════════════╝
+
+
+═══════════════════════════════════════════════════════════════════
+  ERSTMALIGE INSTALLATION
+═══════════════════════════════════════════════════════════════════
+
+1. Node.js installieren von: https://nodejs.org
+   → LTS Version (grüner Button)
+   → Computer neu starten!
+
+2. PowerShell in diesem Ordner öffnen:
+   → Rechtsklick auf "server" Ordner
+   → "In Terminal öffnen"
+
+3. Dependencies installieren:
+   
+   npm install
+
+4. Server starten:
+   
+   npm start
+
+
+═══════════════════════════════════════════════════════════════════
+  TÄGLICHE NUTZUNG (nach Installation)
+═══════════════════════════════════════════════════════════════════
+
+Server starten:
+
+   npm start
+
+Server stoppen:
+
+   Strg + C  (im PowerShell-Fenster)
+
+
+═══════════════════════════════════════════════════════════════════
+  TESTEN OB ES FUNKTIONIERT
+═══════════════════════════════════════════════════════════════════
+
+Im Browser öffnen:
+
+   http://localhost:3001/api/health
+
+Erwartete Ausgabe:
+
+   {"status":"ok","message":"Moodboard Server is running"}
+
+
+═══════════════════════════════════════════════════════════════════
+  NETZWERK-IP FINDEN (für Handy-Zugriff)
+═══════════════════════════════════════════════════════════════════
+
+In PowerShell ausführen:
+
+   ipconfig
+
+Suche nach: "IPv4-Adresse"
+Beispiel: 192.168.1.100
+
+Diese IP brauchst du für:
+- Handy-Zugriff
+- Tablet-Zugriff  
+- Andere Computer im Netzwerk
+
+
+═══════════════════════════════════════════════════════════════════
+  FIREWALL ÖFFNEN (für Handy/Tablet-Zugriff)
+═══════════════════════════════════════════════════════════════════
+
+PowerShell als Administrator öffnen:
+
+   Rechtsklick auf PowerShell → "Als Administrator ausführen"
+
+Dann ausführen:
+
+   New-NetFirewallRule -DisplayName "Moodboard Server" -Direction Inbound -LocalPort 3001 -Protocol TCP -Action Allow
+
+
+═══════════════════════════════════════════════════════════════════
+  HANDY-ZUGRIFF TESTEN
+═══════════════════════════════════════════════════════════════════
+
+1. Handy mit gleichem WLAN verbinden
+2. Browser auf Handy öffnen
+3. Gehe zu: http://192.168.1.100:3001/api/health
+   (ersetze 192.168.1.100 mit deiner IP von oben)
+
+Sollte anzeigen: {"status":"ok",...}
+
+
+═══════════════════════════════════════════════════════════════════
+  BACKUP ERSTELLEN
+═══════════════════════════════════════════════════════════════════
+
+Die Datenbank sichern:
+
+   copy data\moodboard.db backup-moodboard.db
+
+Backup wiederherstellen:
+
+   copy backup-moodboard.db data\moodboard.db
+
+
+═══════════════════════════════════════════════════════════════════
+  HÄUFIGE PROBLEME
+═══════════════════════════════════════════════════════════════════
+
+Problem: "npm: Die Benennung wurde nicht als Name eines Cmdlet erkannt"
+Lösung: Node.js installieren und Computer neu starten
+
+Problem: "Port 3001 already in use"  
+Lösung: Port in src/server.js ändern auf 3002
+
+Problem: Handy kann nicht zugreifen
+Lösung: 
+  1. Firewall-Regel erstellen (siehe oben)
+  2. Beide Geräte im gleichen WLAN?
+  3. Richtige IP verwendet?
+
+Problem: Server stoppt wenn ich PowerShell schließe
+Lösung: PowerShell-Fenster offen lassen ODER automatischen Start einrichten
+
+
+═══════════════════════════════════════════════════════════════════
+  WICHTIGE DATEIEN
+═══════════════════════════════════════════════════════════════════
+
+src/server.js           → Haupt-Server (startet hier)
+data/moodboard.db       → Datenbank (wird automatisch erstellt)
+SETUP_ANLEITUNG.md      → Ausführliche Anleitung
+AI_SETUP_PROMPT.txt     → Prompt für AI-Hilfe
+package.json            → Dependencies
+
+
+═══════════════════════════════════════════════════════════════════
+  HILFE BEKOMMEN
+═══════════════════════════════════════════════════════════════════
+
+1. Lies SETUP_ANLEITUNG.md für detaillierte Infos
+
+2. Nutze AI_SETUP_PROMPT.txt mit ChatGPT/Claude für Hilfe
+
+3. Prüfe die Logs im PowerShell-Fenster
+
+4. Teste: http://localhost:3001/api/health
+
+
+═══════════════════════════════════════════════════════════════════
+  STATUS-BEFEHLE
+═══════════════════════════════════════════════════════════════════
+
+Node.js Version:
+   node --version
+
+NPM Version:
+   npm --version
+
+Netzwerk-IP:
+   ipconfig | findstr IPv4
+
+Port-Status prüfen:
+   netstat -ano | findstr :3001
+
+Server-Status:
+   Im Browser: http://localhost:3001/api/health
+
+
+═══════════════════════════════════════════════════════════════════
+
+Das wars! Bei Fragen siehe SETUP_ANLEITUNG.md
+
+Viel Erfolg! 🚀
+
+═══════════════════════════════════════════════════════════════════
+

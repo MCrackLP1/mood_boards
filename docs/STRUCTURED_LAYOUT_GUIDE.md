@@ -300,3 +300,4 @@ Allgemein: Mix aus allen Quellen
 3. **📍 Location** → Notiz + Bilder hinzufügen
 4. Board teilen → Kunde sieht klare Struktur!
 
+

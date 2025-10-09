@@ -372,3 +372,4 @@ default-produkte → "Produkte"
 4. **Ordner auswählen** → Bilder hochladen
 5. **Organisiert!** 🎉
 
+

@@ -1,13 +1,28 @@
 # Moodboard Webapp
 
-Eine minimalistische, private Moodboard-Webapp für Fotografen.
+Eine minimalistische, private Moodboard-Webapp für Fotografen mit **Geräte-Synchronisation**.
+
+## 🆕 Neu: Geräte-übergreifende Synchronisation + Internet-Zugriff
+
+**Alle deine Moodboards auf allen Geräten - überall im Internet!** 
+- ✅ **Windows Home Server Backend** - Deine eigene Cloud-Lösung
+- ✅ **Internet-Zugriff** - Via DuckDNS von überall erreichbar
+- ✅ **Vercel Frontend** - Kostenlos, schnell, HTTPS inklusive
+- ✅ **Automatische Sync** - Desktop, Handy, Tablet immer synchron
+- ✅ **100% privat** - Backend läuft auf deinem Server
+- ✅ **Kostenlos** - Keine Cloud-Gebühren
+
+**API URL**: `http://www.mark-tietz.duckdns.org:3001/api`
+
+👉 **[Lokales Setup](./SYNC_SETUP_GUIDE.md)** - Nur im lokalen Netzwerk  
+👉 **[Internet Setup](./INTERNET_UND_VERCEL_SETUP.md)** - Von überall erreichbar + Vercel
 
 ## ✨ Features
 
 ### Übersicht (Home)
 - Grid-Ansicht aller Moodboards mit Vorschaubildern
 - Erstellen, Duplizieren und Löschen von Boards
-- Persistenz via IndexedDB (local-first)
+- Geräte-übergreifende Synchronisation über eigenen Server
 
 ### Board-Editor
 - **Strukturierte Bereiche**: 3 feste Sections (✨ Beispielbilder, 📍 Location, 📋 Allgemein)
@@ -36,14 +51,44 @@ Provider-basierte Architektur für Ambient Sounds:
 
 ## 🚀 Setup
 
-### Voraussetzungen
-- Node.js 18+ und npm
+### Option 1: Mit Server-Synchronisation (Empfohlen)
 
-### Installation
+Für geräteübergreifende Synchronisation auf deinem Windows Home Server:
+
+1. **Server einrichten** (siehe [SYNC_SETUP_GUIDE.md](./SYNC_SETUP_GUIDE.md))
+   ```powershell
+   cd server
+   npm install
+   npm start
+   ```
+
+2. **Frontend installieren**
+   ```bash
+   npm install
+   ```
+
+3. **Server-URL konfigurieren** (`.env`)
+   ```
+   VITE_API_URL=http://192.168.1.100:3001
+   ```
+
+4. **App bauen**
+   ```bash
+   npm run build
+   ```
+
+**Detaillierte Anleitung**: [SYNC_SETUP_GUIDE.md](./SYNC_SETUP_GUIDE.md)
+
+### Option 2: Standalone (nur lokaler Browser)
+
+Für lokale Nutzung ohne Synchronisation:
 
 ```bash
 npm install
+npm run dev
 ```
+
+> **Hinweis**: Im Standalone-Modus werden Daten nur lokal im Browser gespeichert (IndexedDB)
 
 ### Umgebungsvariablen
 

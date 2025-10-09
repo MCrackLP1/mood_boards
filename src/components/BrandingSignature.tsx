@@ -19,3 +19,4 @@ export function BrandingSignature({ visible = true }: BrandingSignatureProps) {
   );
 }
 
+

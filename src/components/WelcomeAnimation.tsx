@@ -43,3 +43,4 @@ export function WelcomeAnimation({ welcomeText, onComplete }: WelcomeAnimationPr
   );
 }
 
+

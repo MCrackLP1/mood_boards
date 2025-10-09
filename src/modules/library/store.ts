@@ -1,12 +1,11 @@
 /**
  * Asset Library Store
- * Manages user's personal image library
+ * Manages user's personal image library with backend sync
  */
 
 import { create } from 'zustand';
 import { LibraryAsset } from './types';
-import { db } from '@/modules/database/db';
-import { nanoid } from '@/modules/utils/id';
+import { assetsApi } from '@/modules/api/client';
 import { extractColors } from '@/modules/assets/colorExtraction';
 
 interface LibraryStore {
@@ -26,15 +25,13 @@ export const useLibraryStore = create<LibraryStore>((set, get) => ({
   
   loadAssets: async (folderId?: string) => {
     set({ isLoading: true });
-    
-    let query = db.libraryAssets.orderBy('uploadedAt').reverse();
-    
-    if (folderId) {
-      const assets = await query.filter(a => a.folderId === folderId).toArray();
+    try {
+      const assets = await assetsApi.getAll(folderId);
       set({ assets, isLoading: false });
-    } else {
-      const assets = await query.toArray();
-      set({ assets, isLoading: false });
+    } catch (error) {
+      console.error('Failed to load assets:', error);
+      set({ isLoading: false });
+      throw error;
     }
   },
   
@@ -48,8 +45,7 @@ export const useLibraryStore = create<LibraryStore>((set, get) => ({
     // Extract color palette
     const palette = await extractColors(dataUrl);
     
-    const asset: LibraryAsset = {
-      id: nanoid(),
+    const asset = await assetsApi.create({
       folderId,
       name: file.name,
       src: dataUrl,
@@ -57,10 +53,7 @@ export const useLibraryStore = create<LibraryStore>((set, get) => ({
       width: img.width,
       height: img.height,
       fileSize: file.size,
-      uploadedAt: Date.now(),
-    };
-    
-    await db.libraryAssets.add(asset);
+    });
     
     // Update store
     set({ assets: [asset, ...get().assets] });
@@ -69,20 +62,20 @@ export const useLibraryStore = create<LibraryStore>((set, get) => ({
   },
   
   deleteAsset: async (id: string) => {
-    await db.libraryAssets.delete(id);
+    await assetsApi.delete(id);
     set({ assets: get().assets.filter(a => a.id !== id) });
   },
   
   getAsset: async (id: string) => {
-    return db.libraryAssets.get(id);
+    return assetsApi.getById(id);
   },
   
   moveAsset: async (assetId: string, targetFolderId: string) => {
-    await db.libraryAssets.update(assetId, { folderId: targetFolderId });
+    const asset = await assetsApi.move(assetId, targetFolderId);
     
     set({
       assets: get().assets.map(a => 
-        a.id === assetId ? { ...a, folderId: targetFolderId } : a
+        a.id === assetId ? asset : a
       ),
     });
   },

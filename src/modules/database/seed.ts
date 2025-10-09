@@ -120,3 +120,4 @@ export async function clearAllData() {
   console.log('🗑️ Alle Daten gelöscht');
 }
 
+

@@ -1,12 +1,11 @@
 /**
  * Zustand store for boards and items
- * Provides reactive state management with auto-save to IndexedDB
+ * Provides reactive state management with backend API sync
  */
 
 import { create } from 'zustand';
 import { Board, BoardItem } from '@/types';
-import { db } from '@/modules/database/db';
-import { nanoid } from '@/modules/utils/id';
+import { boardsApi, itemsApi } from '@/modules/api/client';
 
 interface BoardStore {
   boards: Board[];
@@ -39,40 +38,33 @@ export const useBoardStore = create<BoardStore>((set, get) => ({
   
   loadBoards: async () => {
     set({ isLoading: true });
-    const boards = await db.boards.orderBy('createdAt').reverse().toArray();
-    set({ boards, isLoading: false });
+    try {
+      const boards = await boardsApi.getAll();
+      set({ boards, isLoading: false });
+    } catch (error) {
+      console.error('Failed to load boards:', error);
+      set({ isLoading: false });
+      throw error;
+    }
   },
   
   createBoard: async (title: string) => {
-    const board: Board = {
-      id: nanoid(),
-      title,
-      createdAt: Date.now(),
-      updatedAt: Date.now(),
-      welcomeText: `Willkommen zu ${title}`,
-      brandingEnabled: true,
-    };
-    
-    await db.boards.add(board);
+    const board = await boardsApi.create(title);
     set({ boards: [board, ...get().boards] });
     return board;
   },
   
   updateBoard: async (id: string, updates: Partial<Board>) => {
-    const updated = { ...updates, updatedAt: Date.now() };
-    await db.boards.update(id, updated);
+    const board = await boardsApi.update(id, updates);
     
     set({
-      boards: get().boards.map(b => b.id === id ? { ...b, ...updated } : b),
-      currentBoard: get().currentBoard?.id === id 
-        ? { ...get().currentBoard!, ...updated } 
-        : get().currentBoard,
+      boards: get().boards.map(b => b.id === id ? board : b),
+      currentBoard: get().currentBoard?.id === id ? board : get().currentBoard,
     });
   },
   
   deleteBoard: async (id: string) => {
-    await db.boards.delete(id);
-    await db.items.where('boardId').equals(id).delete();
+    await boardsApi.delete(id);
     
     set({
       boards: get().boards.filter(b => b.id !== id),
@@ -82,97 +74,42 @@ export const useBoardStore = create<BoardStore>((set, get) => ({
   },
   
   duplicateBoard: async (id: string) => {
-    const original = await db.boards.get(id);
-    if (!original) throw new Error('Board not found');
-    
-    const newBoard: Board = {
-      ...original,
-      id: nanoid(),
-      title: `${original.title} (Kopie)`,
-      createdAt: Date.now(),
-      updatedAt: Date.now(),
-    };
-    
-    await db.boards.add(newBoard);
-    
-    // Duplicate items
-    const items = await db.items.where('boardId').equals(id).toArray();
-    const newItems = items.map(item => ({
-      ...item,
-      id: nanoid(),
-      boardId: newBoard.id,
-    }));
-    
-    await db.items.bulkAdd(newItems);
-    
+    const newBoard = await boardsApi.duplicate(id);
     set({ boards: [newBoard, ...get().boards] });
     return newBoard;
   },
   
   selectBoard: async (id: string) => {
-    const board = await db.boards.get(id);
-    if (!board) throw new Error('Board not found');
-    
+    const board = await boardsApi.getById(id);
     set({ currentBoard: board });
     await get().loadItems(id);
   },
   
   loadItems: async (boardId: string) => {
-    const items = await db.items
-      .where('boardId')
-      .equals(boardId)
-      .sortBy('order');
-    
+    const items = await itemsApi.getByBoardId(boardId);
     set({ currentItems: items });
   },
   
   addItem: async (boardId: string, item) => {
-    const items = get().currentItems;
-    const order = items.length > 0 ? Math.max(...items.map(i => i.order)) + 1 : 0;
-    
-    const newItem: BoardItem = {
-      ...item,
-      id: nanoid(),
-      boardId,
-      createdAt: Date.now(),
-      order,
-    };
-    
-    await db.items.add(newItem);
+    const newItem = await itemsApi.create({ ...item, boardId });
     set({ currentItems: [...get().currentItems, newItem] });
-    
-    // Auto-save board timestamp
-    await get().updateBoard(boardId, {});
-    
     return newItem;
   },
   
   updateItem: async (id: string, updates: Partial<BoardItem>) => {
-    await db.items.update(id, updates);
+    const updatedItem = await itemsApi.update(id, updates);
     
     set({
       currentItems: get().currentItems.map(item => 
-        item.id === id ? { ...item, ...updates } : item
+        item.id === id ? updatedItem : item
       ),
     });
-    
-    // Auto-save board timestamp
-    const item = get().currentItems.find(i => i.id === id);
-    if (item) {
-      await get().updateBoard(item.boardId, {});
-    }
   },
   
   deleteItem: async (id: string) => {
-    await db.items.delete(id);
-    
-    const item = get().currentItems.find(i => i.id === id);
+    await itemsApi.delete(id);
     set({ currentItems: get().currentItems.filter(i => i.id !== id) });
-    
-    // Auto-save board timestamp
-    if (item) {
-      await get().updateBoard(item.boardId, {});
-    }
   },
 }));
+
 

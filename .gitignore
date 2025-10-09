@@ -1,14 +1,25 @@
 # Dependencies
 node_modules
+server/node_modules
 
 # Build output
 dist
 build
 
-# Environment variables
+# Environment variables (WICHTIG: Nicht committen!)
 .env
 .env.local
+.env.production
+.env.development
 .env.*.local
+
+# Server data (Datenbank nicht committen!)
+server/data
+*.db
+*.db-journal
+
+# Backups
+backups
 
 # IDE
 .vscode
@@ -23,7 +34,15 @@ Thumbs.db
 # Logs
 *.log
 npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
 
 # Testing
 coverage
 
+# Vercel
+.vercel
+
+# Optional: Große Dateien
+public/assets/*.mp4
+public/assets/*.mov

@@ -1,11 +1,10 @@
 /**
- * Folder Store for asset library organization
+ * Folder Store for asset library organization with backend sync
  */
 
 import { create } from 'zustand';
 import { LibraryFolder, DEFAULT_FOLDERS } from './folderTypes';
-import { db } from '@/modules/database/db';
-import { nanoid } from '@/modules/utils/id';
+import { foldersApi } from '@/modules/api/client';
 
 interface FolderStore {
   folders: LibraryFolder[];
@@ -24,20 +23,26 @@ export const useFolderStore = create<FolderStore>((set, get) => ({
   
   loadFolders: async () => {
     set({ isLoading: true });
-    const folders = await db.libraryFolders.orderBy('order').toArray();
-    
-    // Initialize default folders if none exist (except uncategorized)
-    if (folders.filter(f => f.id !== 'uncategorized').length === 0) {
-      await get().initializeDefaultFolders();
-      const updatedFolders = await db.libraryFolders.orderBy('order').toArray();
-      set({ folders: updatedFolders, isLoading: false });
-    } else {
-      set({ folders, isLoading: false });
+    try {
+      const folders = await foldersApi.getAll();
+      
+      // Initialize default folders if none exist (except uncategorized)
+      if (folders.filter(f => f.id !== 'uncategorized').length === 0) {
+        await get().initializeDefaultFolders();
+        const updatedFolders = await foldersApi.getAll();
+        set({ folders: updatedFolders, isLoading: false });
+      } else {
+        set({ folders, isLoading: false });
+      }
+    } catch (error) {
+      console.error('Failed to load folders:', error);
+      set({ isLoading: false });
+      throw error;
     }
   },
   
   initializeDefaultFolders: async () => {
-    const existingFolders = await db.libraryFolders.toArray();
+    const existingFolders = await foldersApi.getAll();
     const existingIds = new Set(existingFolders.map(f => f.id));
     
     for (const defaultFolder of DEFAULT_FOLDERS) {
@@ -45,39 +50,24 @@ export const useFolderStore = create<FolderStore>((set, get) => ({
       const folderId = `default-${defaultFolder.name.toLowerCase().replace(/\s+/g, '-')}`;
       if (existingIds.has(folderId)) continue;
       
-      const folder: LibraryFolder = {
-        id: folderId,
-        ...defaultFolder,
-        createdAt: Date.now(),
-      };
-      
-      await db.libraryFolders.add(folder);
+      await foldersApi.create({
+        name: defaultFolder.name,
+        icon: defaultFolder.icon,
+      });
     }
   },
   
   createFolder: async (name: string, icon = '📁') => {
-    const folders = get().folders;
-    const maxOrder = folders.length > 0 ? Math.max(...folders.map(f => f.order)) : 0;
-    
-    const folder: LibraryFolder = {
-      id: nanoid(),
-      name,
-      icon,
-      createdAt: Date.now(),
-      order: maxOrder + 1,
-    };
-    
-    await db.libraryFolders.add(folder);
+    const folder = await foldersApi.create({ name, icon });
     set({ folders: [...get().folders, folder].sort((a, b) => a.order - b.order) });
-    
     return folder;
   },
   
   updateFolder: async (id: string, updates: Partial<LibraryFolder>) => {
-    await db.libraryFolders.update(id, updates);
+    const folder = await foldersApi.update(id, updates);
     
     set({
-      folders: get().folders.map(f => f.id === id ? { ...f, ...updates } : f),
+      folders: get().folders.map(f => f.id === id ? folder : f),
     });
   },
   
@@ -88,16 +78,9 @@ export const useFolderStore = create<FolderStore>((set, get) => ({
       return;
     }
     
-    // Move assets from this folder to uncategorized
-    await db.libraryAssets
-      .where('folderId')
-      .equals(id)
-      .modify({ folderId: 'uncategorized' });
-    
-    // Delete folder
-    await db.libraryFolders.delete(id);
-    
+    await foldersApi.delete(id);
     set({ folders: get().folders.filter(f => f.id !== id) });
   },
 }));
+
 

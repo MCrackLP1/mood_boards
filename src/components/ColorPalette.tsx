@@ -36,3 +36,4 @@ export function ColorPalette({ colors, selectedColor, onColorSelect, title }: Co
   );
 }
 
+
