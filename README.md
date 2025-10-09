@@ -11,8 +11,10 @@ Eine minimalistische, private Moodboard-Webapp für Fotografen.
 
 ### Board-Editor
 - **Drag & Drop Upload**: Bilder per Drag & Drop oder Datei-Dialog hochladen
+- **Web-Bildsuche**: Suche & Import von Bildern direkt aus Unsplash, Pexels & Pixabay
 - **Automatische Farbextraktion**: 5-8 dominante Farben pro Bild
 - **Farb-Filter**: Klick auf Farbe hebt Bilder mit ähnlicher Farbdominanz hervor
+- **Bild-Notizen**: Labels und Beschreibungen für jedes Bild
 - **Auto-Save**: Änderungen werden automatisch gespeichert
 - **Einstellungen**: Board-Titel und Willkommenstext anpassen
 
@@ -46,6 +48,11 @@ npm install
 Kopiere `.env.example` zu `.env` und füge optional API-Keys hinzu:
 
 ```bash
+# Image Search Provider API Keys (optional)
+VITE_IMAGE_UNSPLASH_KEY=your_key_here
+VITE_IMAGE_PEXELS_KEY=your_key_here
+VITE_IMAGE_PIXABAY_KEY=your_key_here
+
 # Audio Provider API Keys (optional)
 VITE_AUDIO_PIXABAY_KEY=your_key_here
 VITE_AUDIO_FREESOUND_KEY=your_key_here
@@ -54,7 +61,12 @@ VITE_AUDIO_FREESOUND_KEY=your_key_here
 VITE_PUBLIC_BASE_URL=http://localhost:3000
 ```
 
-> **Hinweis**: Ohne API-Keys funktioniert die App vollständig, nur Audio-Features sind deaktiviert.
+#### API-Keys erhalten (kostenlos):
+- **Unsplash**: https://unsplash.com/developers (50 requests/Stunde gratis)
+- **Pexels**: https://www.pexels.com/api/ (200 requests/Stunde gratis)
+- **Pixabay**: https://pixabay.com/api/docs/ (Keine Limits, CC0-Lizenz)
+
+> **Hinweis**: Ohne API-Keys funktioniert die App vollständig, nur Web-Bildsuche und Audio-Features sind deaktiviert.
 
 ## 🛠️ Development
 

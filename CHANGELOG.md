@@ -2,6 +2,28 @@
 
 Alle wichtigen Änderungen an diesem Projekt werden in dieser Datei dokumentiert.
 
+## [1.2.0] - 2024-10-09
+
+### ✨ Neue Features
+
+#### Web-Bildsuche 🔍
+- **Multi-Provider-Suche**: Durchsuche Unsplash, Pexels und Pixabay gleichzeitig
+- **Direkter Import**: Bilder mit einem Klick ins Board einfügen
+- **Automatische Attribution**: Fotografen-Namen werden als Label hinzugefügt
+- **Kostenlose APIs**: Alle Provider haben großzügige Free-Tiers
+- **Fallback-Modus**: Funktioniert auch ohne API-Keys (zeigt Hinweis)
+
+### 📊 Performance
+- Bundle-Size: +1.8 KB (gzip) für komplettes Bildsuche-System
+- Parallele API-Anfragen für schnellere Ergebnisse
+- Lazy-Loading der Suchergebnisse
+
+### 🎨 UX-Verbesserungen
+- Neuer "🔍 Web-Suche" Button im Upload-Bereich
+- Modal mit Grid-Layout für Suchergebnisse
+- Loading-States während Download
+- Photographer-Attribution im Hover-State
+
 ## [1.1.0] - 2024-10-09
 
 ### ✨ Neue Features
