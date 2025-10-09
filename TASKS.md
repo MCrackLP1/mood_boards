@@ -13,15 +13,23 @@
 - [ ] Fallback für lokale Audio-Dateien (`/public/sounds/`)
 - [ ] Audio-Provider-Tests
 
-### Fullscreen-View
-- [ ] Lightbox für Bilder mit Notiz/Meta
-- [ ] Tastatur-Navigation (←/→ für Bilder)
-- [ ] ESC zum Schließen
+### Fullscreen-View ✅ DONE
+- [x] Lightbox für Bilder mit Notiz/Meta
+- [x] Tastatur-Navigation (←/→ für Bilder)
+- [x] ESC zum Schließen
 
-### Notizen pro Element
-- [ ] Text-Input für Bild-Labels
-- [ ] Beschreibung/Meta-Daten hinzufügen
-- [ ] UI für Notiz-Anzeige in CustomerView
+### Notizen pro Element ✅ DONE
+- [x] Text-Input für Bild-Labels
+- [x] Beschreibung/Meta-Daten hinzufügen
+- [x] UI für Notiz-Anzeige in CustomerView
+
+### Performance-Optimierungen ✅ DONE
+- [x] Lazy Loading für Bilder mit IntersectionObserver
+- [x] Skeleton-Loader während Lade-Vorgang
+
+### SEO ✅ DONE
+- [x] Dynamic Meta-Tags für Customer View
+- [x] Open Graph & Twitter Cards Support
 
 ## 🎁 Stretch Goals
 
