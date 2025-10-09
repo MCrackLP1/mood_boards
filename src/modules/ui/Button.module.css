@@ -1,12 +1,19 @@
 .button {
   padding: 0.625rem 1.25rem;
   border: none;
-  border-radius: 0.375rem;
-  font-size: 0.875rem;
+  border-radius: var(--radius-md);
+  font-size: var(--font-size-sm);
   font-weight: 500;
   cursor: pointer;
-  transition: all 0.15s ease;
+  transition: all var(--transition-base);
   font-family: inherit;
+  position: relative;
+  overflow: hidden;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  white-space: nowrap;
 }
 
 .button:disabled {
@@ -14,40 +21,72 @@
   cursor: not-allowed;
 }
 
+.button:active:not(:disabled) {
+  transform: scale(0.98);
+}
+
 .primary {
-  background: #000;
+  background: var(--gradient-primary);
   color: #fff;
+  box-shadow: var(--shadow-sm), var(--shadow-glow);
+  font-weight: 600;
 }
 
 .primary:hover:not(:disabled) {
-  background: #333;
+  background: var(--gradient-hover);
+  box-shadow: var(--shadow-md), var(--shadow-glow-strong);
+  transform: translateY(-1px);
+}
+
+.primary:active:not(:disabled) {
+  transform: translateY(0) scale(0.98);
 }
 
 .secondary {
-  background: #f5f5f5;
-  color: #000;
+  background: var(--gray-100);
+  color: var(--gray-900);
+  border: 1px solid var(--border);
 }
 
 .secondary:hover:not(:disabled) {
-  background: #e5e5e5;
+  background: var(--gray-200);
+  border-color: var(--gray-300);
+  box-shadow: var(--shadow-sm);
+  transform: translateY(-1px);
+}
+
+.secondary:active:not(:disabled) {
+  transform: translateY(0) scale(0.98);
 }
 
 .ghost {
   background: transparent;
-  color: #666;
+  color: var(--gray-600);
 }
 
 .ghost:hover:not(:disabled) {
-  background: #f5f5f5;
+  background: var(--gray-100);
+  color: var(--gray-900);
+}
+
+.ghost:active:not(:disabled) {
+  background: var(--gray-200);
 }
 
 .danger {
   background: #dc2626;
   color: #fff;
+  box-shadow: var(--shadow-sm);
 }
 
 .danger:hover:not(:disabled) {
   background: #b91c1c;
+  box-shadow: var(--shadow-md), 0 0 20px rgba(220, 38, 38, 0.3);
+  transform: translateY(-1px);
+}
+
+.danger:active:not(:disabled) {
+  transform: translateY(0) scale(0.98);
 }
 
 
