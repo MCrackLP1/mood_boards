@@ -13,7 +13,7 @@ export default function ImageCard({ image }: ImageCardProps) {
     const { activeColor, setActiveColor } = useBoards();
     
     return (
-        <Palette src={image.url} crossOrigin="anonymous" format="hex" count={5}>
+        <Palette src={image.url} crossOrigin="anonymous" format="hex" colorCount={5}>
             {({ data, loading }) => {
                 const containsActiveColor = data?.includes(activeColor || '') || false;
                 const isFiltered = activeColor && !containsActiveColor;
