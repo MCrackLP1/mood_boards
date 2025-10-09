@@ -27,6 +27,42 @@ Alle wichtigen Änderungen an diesem Projekt werden in dieser Datei dokumentiert
 - Effiziente IndexedDB-Queries
 - Version 2 Migration (automatisch)
 
+## [1.5.0] - 2024-10-09
+
+### ✨ Neue Features - Strukturiertes Board-Layout
+
+#### Feste Bereiche (Sections) 📋
+- **3 vordefinierte Bereiche**: 
+  - ✨ Beispielbilder (Inspiration & Referenzen)
+  - 📍 Location (Ort, Setting & Atmosphäre)
+  - 📋 Allgemein (Weitere Inhalte)
+- **Text & Bilder pro Bereich**: Jede Section kann Notizen UND Bilder enthalten
+- **Dedizierte Aktionen**: 4 Buttons pro Section (📁 📚 🔍 📝)
+- **Strukturierte Präsentation**: Kunden sehen klar getrennte Bereiche
+- **Automatische Migration**: Bestehende Items werden zu "Allgemein" migriert
+
+#### Notizen-System 📝
+- **Inline-Editor**: Notizen direkt in der Section bearbeiten
+- **Gelbe Notiz-Karten**: Visuell von Bildern getrennt
+- **Multi-Line Support**: Mehrzeilige Notizen möglich
+- **Bearbeiten & Löschen**: ✏️ und 🗑️ Buttons pro Notiz
+
+### 🎨 UX-Verbesserungen
+- Klare visuelle Hierarchie (Icon + Titel + Beschreibung)
+- Kompakte Icon-Buttons statt Text-Buttons
+- Bessere Übersicht durch Sections
+- Customer-View zeigt Struktur prominent
+
+### 📊 Performance
+- Bundle-Size: +1.84 KB (gzip)
+- IndexedDB Version 3 Migration (automatisch)
+- Backwards-compatible mit alten Boards
+
+### 🔄 Migration
+- Bestehende Boards: Alle Items → "Allgemein"
+- Neue Boards: Leere Sections, ready to use
+- Keine manuellen Schritte nötig
+
 ## [1.3.0] - 2024-10-09
 
 ### ✨ Neue Features

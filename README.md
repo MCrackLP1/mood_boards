@@ -10,13 +10,13 @@ Eine minimalistische, private Moodboard-Webapp für Fotografen.
 - Persistenz via IndexedDB (local-first)
 
 ### Board-Editor
-- **Drag & Drop Upload**: Bilder per Drag & Drop oder Datei-Dialog hochladen
-- **📚 Mediathek**: Lokaler Speicher für eigene Bilder - einmal hochladen, überall verwenden
+- **Strukturierte Bereiche**: 3 feste Sections (✨ Beispielbilder, 📍 Location, 📋 Allgemein)
+- **Text & Bilder kombiniert**: Notizen und Bilder pro Section
+- **Mediathek**: Lokaler Speicher für eigene Bilder - einmal hochladen, überall verwenden
 - **Web-Bildsuche**: Suche & Import von Bildern direkt aus Unsplash, Pexels & Pixabay
 - **Multi-Select**: Mehrere Bilder auf einmal auswählen und hinzufügen
 - **Automatische Farbextraktion**: 5-8 dominante Farben pro Bild
-- **Farb-Filter**: Klick auf Farbe hebt Bilder mit ähnlicher Farbdominanz hervor
-- **Bild-Notizen**: Labels und Beschreibungen für jedes Bild
+- **Inline-Notizen**: Bearbeitbare Text-Notizen pro Section
 - **Auto-Save**: Änderungen werden automatisch gespeichert
 - **Einstellungen**: Board-Titel und Willkommenstext anpassen
 
