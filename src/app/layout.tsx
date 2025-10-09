@@ -16,8 +16,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className="bg-gray-50 text-gray-800">
-      <body className={GeistSans.className}>
+    <html lang="en" className="bg-white text-gray-900">
+      <body className={`${GeistSans.className} antialiased`}>
         <BoardProvider>
           <SmoothScroller>
             {children}

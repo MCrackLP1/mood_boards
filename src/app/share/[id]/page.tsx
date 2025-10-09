@@ -121,64 +121,70 @@ export default function ShareBoardPage() {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.8 }}
-          className="container mx-auto p-8 md:p-12"
+          className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-50"
         >
           {/* Header */}
-          <motion.div 
-            initial={{ y: -20, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            transition={{ delay: 0.2, duration: 0.6 }}
-            className="text-center mb-12"
-          >
-            <h1 className="text-4xl md:text-5xl font-bold text-gray-800 mb-4 tracking-tight">
-              {board.title}
-            </h1>
-            {board.clientName && (
-              <p className="text-lg text-gray-500">für {board.clientName}</p>
-            )}
-          </motion.div>
+          <div className="border-b border-gray-100 bg-white/50 backdrop-blur-sm">
+            <div className="container mx-auto px-6 md:px-12 py-12">
+              <motion.div 
+                initial={{ y: -20, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                transition={{ delay: 0.2, duration: 0.6 }}
+                className="text-center"
+              >
+                <h1 className="text-4xl md:text-6xl font-bold tracking-tight mb-4 bg-gradient-to-r from-gray-900 via-gray-800 to-gray-900 bg-clip-text text-transparent">
+                  {board.title}
+                </h1>
+                {board.clientName && (
+                  <p className="text-xl text-gray-600 font-medium">for {board.clientName}</p>
+                )}
+              </motion.div>
+            </div>
+          </div>
 
-          {/* Masonry Grid */}
-          <motion.div
-            initial={{ y: 20, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            transition={{ delay: 0.4, duration: 0.6 }}
-          >
-            <Masonry
-              breakpointCols={breakpointColumnsObj}
-              className="my-masonry-grid"
-              columnClassName="my-masonry-grid_column"
+          {/* Content */}
+          <div className="container mx-auto px-6 md:px-12 py-16">
+            <motion.div
+              initial={{ y: 20, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              transition={{ delay: 0.4, duration: 0.6 }}
             >
-              {board.items.map((item, index) => {
-                if (item.type === 'image') {
-                  return (
-                    <motion.div
-                      key={item.id}
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: 0.5 + index * 0.1, duration: 0.5 }}
-                    >
-                      <ImageCard image={item} />
-                    </motion.div>
-                  );
-                }
-                if (item.type === 'note') {
-                  return (
-                    <motion.div
-                      key={item.id}
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: 0.5 + index * 0.1, duration: 0.5 }}
-                      className="bg-yellow-100 p-6 rounded-lg shadow-sm mb-4"
-                    >
-                      <p className="text-gray-800 whitespace-pre-wrap">{item.content}</p>
-                    </motion.div>
-                  );
-                }
-                return null;
-              })}
-            </Masonry>
-          </motion.div>
+              <Masonry
+                breakpointCols={breakpointColumnsObj}
+                className="my-masonry-grid"
+                columnClassName="my-masonry-grid_column"
+              >
+                {board.items.map((item, index) => {
+                  if (item.type === 'image') {
+                    return (
+                      <motion.div
+                        key={item.id}
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.5 + index * 0.08, duration: 0.5 }}
+                      >
+                        <ImageCard image={item} />
+                      </motion.div>
+                    );
+                  }
+                  if (item.type === 'note') {
+                    return (
+                      <motion.div
+                        key={item.id}
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.5 + index * 0.08, duration: 0.5 }}
+                        className="bg-gradient-to-br from-yellow-50 to-amber-50 p-8 rounded-2xl shadow-md border border-yellow-200/50"
+                      >
+                        <p className="text-gray-800 whitespace-pre-wrap text-lg leading-relaxed">{item.content}</p>
+                      </motion.div>
+                    );
+                  }
+                  return null;
+                })}
+              </Masonry>
+            </motion.div>
+          </div>
 
           {/* Footer */}
           {board.showSignature !== false && (
@@ -186,16 +192,21 @@ export default function ShareBoardPage() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: 1, duration: 0.6 }}
-              className="text-center mt-16 pt-8 border-t border-gray-200"
+              className="border-t border-gray-100 bg-white/50 backdrop-blur-sm py-12"
             >
-              <a 
-                href="https://www.marktietz.de" 
-                target="_blank" 
-                rel="noopener noreferrer"
-                className="text-sm text-gray-400 hover:text-gray-600 transition-colors"
-              >
-                by Mark Tietz Fotografie
-              </a>
+              <div className="container mx-auto px-6 md:px-12 text-center">
+                <a 
+                  href="https://www.marktietz.de" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-2 text-gray-500 hover:text-gray-900 transition-colors text-sm font-medium group"
+                >
+                  <span>by Mark Tietz Fotografie</span>
+                  <svg className="w-4 h-4 group-hover:translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                  </svg>
+                </a>
+              </div>
             </motion.div>
           )}
         </motion.div>
