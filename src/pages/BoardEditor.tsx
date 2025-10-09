@@ -210,56 +210,24 @@ export function BoardEditor({ boardId, onBack, onShare }: BoardEditorProps) {
         }
       }
       
-      // Check if it's a Pinterest Board (collection of pins)
-      if (isPinterestBoard(linkUrl)) {
-        alert(
-          '📌 Pinterest Board Import\n\n' +
-          'Pinterest Boards können leider nicht automatisch importiert werden.\n\n' +
-          'Alternative:\n' +
-          '1. Öffne das Board auf Pinterest\n' +
-          '2. Klicke auf einzelne Bilder\n' +
-          '3. Kopiere die direkte Bild-URL (Rechtsklick → Bild in neuem Tab öffnen)\n' +
-          '4. Füge jede Bild-URL hier ein\n\n' +
-          '💡 Tipp: Direkte i.pinimg.com URLs funktionieren perfekt!'
-        );
-        setLinkLoading(false);
+      // Pinterest URLs (Boards or Pins) - just add as link without trying to fetch
+      if (isPinterestBoard(linkUrl) || isPinterestUrl(linkUrl)) {
+        // Add as simple link card without fetching preview (to avoid CORS issues)
+        await addItem(boardId, {
+          type: 'link',
+          linkUrl,
+          linkPreview: {
+            title: 'Pinterest',
+            description: linkUrl,
+            image: '📌',
+            domain: 'pinterest.com',
+          },
+          section: currentSection.id,
+        });
+        
+        setLinkUrl('');
+        setIsLinkModalOpen(false);
         return;
-      }
-      
-      // Special handling for single Pinterest Pin URLs
-      if (isPinterestUrl(linkUrl)) {
-        // Show helpful instructions for Pinterest images
-        const useDirectImage = confirm(
-          '📌 Pinterest-Bilder hinzufügen\n\n' +
-          'Um Pinterest-Bilder direkt als Vorschau anzuzeigen:\n\n' +
-          '1. Öffne den Pinterest-Pin in einem neuen Tab\n' +
-          '2. Rechtsklick auf das Bild → "Bild in neuem Tab öffnen"\n' +
-          '3. Kopiere die Bild-URL (beginnt mit i.pinimg.com)\n' +
-          '4. Füge diese direkte Bild-URL hier ein\n\n' +
-          '❓ Möchtest du die Anleitung nochmal sehen?\n\n' +
-          'Klicke "OK" für mehr Details oder "Abbrechen" um fortzufahren.'
-        );
-        
-        if (useDirectImage) {
-          // Show detailed instructions
-          alert(
-            '📌 Detaillierte Anleitung:\n\n' +
-            '1. Öffne deinen Pinterest-Link im Browser:\n' +
-            '   ' + linkUrl + '\n\n' +
-            '2. Warte bis die Seite geladen ist\n\n' +
-            '3. Rechtsklick auf das große Bild\n\n' +
-            '4. Wähle "Bild in neuem Tab öffnen" oder "Grafikadresse kopieren"\n\n' +
-            '5. Die URL sollte so aussehen:\n' +
-            '   https://i.pinimg.com/originals/...\n\n' +
-            '6. Kopiere diese URL und füge sie hier ein\n\n' +
-            '💡 Tipp: Die direkte Bild-URL funktioniert perfekt ohne Probleme!'
-          );
-          setLinkLoading(false);
-          return;
-        }
-        
-        // If user wants to continue, add as link preview
-        console.warn('Adding Pinterest URL as link preview');
       }
       
       // Regular link handling for non-Pinterest URLs or failed Pinterest extraction
