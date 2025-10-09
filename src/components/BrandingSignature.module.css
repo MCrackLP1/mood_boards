@@ -1,0 +1,13 @@
+.signature {
+  position: fixed;
+  bottom: 1.5rem;
+  right: 1.5rem;
+  font-size: 0.75rem;
+  color: #000;
+  opacity: 0.5;
+  font-weight: 300;
+  letter-spacing: 0.05em;
+  pointer-events: none;
+  z-index: 100;
+}
+

@@ -1,0 +1,104 @@
+.page {
+  min-height: 100vh;
+  padding: 2rem;
+  background: #fafafa;
+}
+
+.loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  font-size: 1.125rem;
+  color: #666;
+}
+
+.passwordScreen {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  padding: 2rem;
+}
+
+.passwordCard {
+  background: #fff;
+  padding: 2rem;
+  border-radius: 0.75rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  max-width: 400px;
+  width: 100%;
+  text-align: center;
+}
+
+.passwordCard h1 {
+  font-size: 1.5rem;
+  margin: 0 0 0.5rem 0;
+}
+
+.passwordCard p {
+  color: #666;
+  margin: 0 0 1.5rem 0;
+}
+
+.content {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.header {
+  text-align: center;
+  margin-bottom: 3rem;
+}
+
+.title {
+  font-size: 2.5rem;
+  font-weight: 600;
+  margin: 0 0 1rem 0;
+}
+
+.audioControls {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.volumeControl {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.volumeSlider {
+  width: 100px;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 2rem;
+}
+
+.empty {
+  text-align: center;
+  padding: 4rem 2rem;
+  color: #999;
+}
+
+@media (max-width: 768px) {
+  .page {
+    padding: 1rem;
+  }
+  
+  .title {
+    font-size: 1.75rem;
+  }
+  
+  .grid {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
+}
+

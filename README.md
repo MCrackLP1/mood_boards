@@ -1,232 +1,203 @@
-# 🎨 Moodboard-Webapp – Mark Tietz Fotografie Edition
+# Moodboard Webapp
 
-Eine minimalistische, persönliche Web-App, um Moodboards für Kunden zu erstellen, zu speichern und stilvoll zu präsentieren — ohne unnötigen UI-Overload, nur pure Ästhetik & Funktion.
-
-> "Ein digitaler Raum, in dem deine kreative Vision entsteht und Kunden sie fühlen können."
-
----
+Eine minimalistische, private Moodboard-Webapp für Fotografen.
 
 ## ✨ Features
 
-### 🎯 Board-Verwaltung
-- ✅ **Boards erstellen** mit individuellem Titel
-- ✅ **Boards duplizieren** für schnelle Vorlagen
-- ✅ **Boards löschen** mit Bestätigungs-Dialog
-- ✅ **Titel bearbeiten** per Click-to-Edit
-- ✅ **Automatische Vorschaubilder** aus erstem Board-Bild
+### Übersicht (Home)
+- Grid-Ansicht aller Moodboards mit Vorschaubildern
+- Erstellen, Duplizieren und Löschen von Boards
+- Persistenz via IndexedDB (local-first)
 
-### 📸 Board-Inhalte
-- ✅ **Drag & Drop Upload** von Bildern
-- ✅ **Freitext-Notizen** mit Auto-Resize
-- ✅ **Masonry Grid Layout** (Pinterest-Style) für ästhetische Darstellung
-- ✅ **Responsive Design** für alle Geräte
+### Board-Editor
+- **Drag & Drop Upload**: Bilder per Drag & Drop oder Datei-Dialog hochladen
+- **Automatische Farbextraktion**: 5-8 dominante Farben pro Bild
+- **Farb-Filter**: Klick auf Farbe hebt Bilder mit ähnlicher Farbdominanz hervor
+- **Auto-Save**: Änderungen werden automatisch gespeichert
+- **Einstellungen**: Board-Titel und Willkommenstext anpassen
 
-### 🎨 Farb-Sampler
-- ✅ **Automatische Farbextraktion** aus Bildern (5 Hauptfarben)
-- ✅ **Klickbare Farbfelder** zum Filtern
-- ✅ **Smart Highlighting**: Bilder mit gewählter Farbe bleiben sichtbar, andere werden transparent
-- ✅ **Visueller Filter-Status** mit Clear-Button
+### Kundenansicht (Read-Only)
+- Öffentlicher, nicht gelisteter Link (`#/view/{id}`)
+- **Willkommensanimation**: Dezente Animation mit Branding und personalisiertem Text
+- **Ambient Sound** (optional): Audio-Player mit Lautstärkeregler
+- **Passwortschutz** (optional): Einfacher clientseitiger Schutz
+- **Branding-Signatur**: "by Mark Tietz Fotografie" (toggelbar)
+- **Smooth Scrolling**: Sanfte Scroll-Animationen und Fade-Ins
 
-### 🌐 Kundenansicht
-- ✅ **Öffentlicher Share-Link** (`/share/[boardId]`)
-- ✅ **Passwortschutz** für geschützte Boards
-- ✅ **Read-Only Modus** ohne Edit-Funktionen
-- ✅ **Link kopieren** mit einem Klick
+### Audio-Provider-System
+Provider-basierte Architektur für Ambient Sounds:
+- **Pixabay Sounds** (CC0)
+- **Freesound.org** (CC-Lizenzen)
+- **Fallback**: Lokale Audio-Dateien oder kein Sound
 
-### 🎬 Willkommensanimation
-- ✅ **Emotionaler Einstieg** mit Fade-In Animation
-- ✅ **Personalisierte Begrüßung** mit Kundenname
-- ✅ **Individuelle Willkommensnachricht**
-- ✅ **Animierter Hintergrund** mit sanften Gradienten
-- ✅ **Automatisches Timing** (2,5 Sekunden)
+## 🚀 Setup
 
-### ✨ Motion Design
-- ✅ **Smooth Scrolling** mit Lenis.js
-- ✅ **Fade-In Animationen** beim Laden aller Elemente
-- ✅ **Staggered Animations** für Board-Grid
-- ✅ **Hover-Effekte** auf Interaktions-Elementen
-- ✅ **Framer Motion** Integration
+### Voraussetzungen
+- Node.js 18+ und npm
 
-### 🖋️ Branding
-- ✅ **Dezente Signatur** ("by Mark Tietz Fotografie")
-- ✅ **Toggle-Funktion** zum Ein-/Ausblenden
-- ✅ **Opacity-Hover** für subtiles Branding
+### Installation
 
----
-
-## 🏗️ Tech Stack
-
-- **Frontend:** Next.js 14 (App Router)
-- **Sprache:** TypeScript
-- **Styling:** TailwindCSS
-- **Animationen:** Framer Motion + Lenis.js
-- **Farbextraktion:** color-thief-react
-- **Layout:** react-masonry-css
-- **Icons:** lucide-react
-- **Storage:** LocalStorage (clientseitig)
-
----
-
-## 🚀 Installation & Start
-
-### 1. Dependencies installieren
 ```bash
 npm install
 ```
 
-### 2. Development Server starten
+### Umgebungsvariablen
+
+Kopiere `.env.example` zu `.env` und füge optional API-Keys hinzu:
+
 ```bash
-npm run dev
+# Audio Provider API Keys (optional)
+VITE_AUDIO_PIXABAY_KEY=your_key_here
+VITE_AUDIO_FREESOUND_KEY=your_key_here
+
+# Public Base URL (für Share-Links)
+VITE_PUBLIC_BASE_URL=http://localhost:3000
 ```
 
-### 3. Browser öffnen
-Öffne [http://localhost:3000](http://localhost:3000)
+> **Hinweis**: Ohne API-Keys funktioniert die App vollständig, nur Audio-Features sind deaktiviert.
 
----
+## 🛠️ Development
 
-## 📖 Benutzung
+```bash
+# Dev-Server starten (http://localhost:3000)
+npm run dev
 
-### Board erstellen
-1. Startseite: Titel eingeben und "Create" klicken
-2. Board öffnet sich automatisch
+# Build für Produktion
+npm run build
 
-### Inhalte hinzufügen
-- **Bilder:** Drag & Drop in die Dropzone oder klicken zum Auswählen
-- **Notizen:** "Add Note" Button klicken
+# Preview des Production-Builds
+npm run preview
 
-### Board mit Kunden teilen
-1. Board öffnen
-2. "Einstellungen" Button klicken
-3. Optional: Kundenname, Willkommensnachricht und Passwort eingeben
-4. Share-Link kopieren und an Kunden senden
+# Tests ausführen
+npm test
+```
 
-### Farben filtern
-1. Auf ein Farbfeld unter einem Bild klicken
-2. Alle Bilder mit ähnlicher Farbe bleiben sichtbar
-3. "Clear" klicken zum Zurücksetzen
+## 📁 Projektstruktur
 
----
+```
+src/
+├── modules/           # Kern-Module (isoliert, wiederverwendbar)
+│   ├── boards/       # Board CRUD & State Management
+│   ├── assets/       # Bild-Upload & Farbextraktion
+│   ├── audio/        # Audio-Provider-System
+│   ├── database/     # IndexedDB Setup (Dexie)
+│   ├── ui/           # Primitive UI-Komponenten
+│   └── utils/        # Utilities (ID, Hash, etc.)
+├── components/       # Feature-spezifische Komponenten
+├── pages/            # Seiten (Home, BoardEditor, CustomerView)
+├── types/            # TypeScript-Typen
+├── App.tsx           # Main App & Routing
+└── main.tsx          # Entry Point
+```
 
-## 🎨 Board-Einstellungen
+## 🎨 Technologie-Stack
 
-Im Settings-Modal kannst du konfigurieren:
+- **Framework**: Vite + React + TypeScript
+- **State Management**: Zustand (minimal, performant)
+- **Storage**: Dexie.js (IndexedDB-Wrapper)
+- **Styling**: CSS Modules (keine externe Dependency)
+- **Testing**: Vitest
+- **Build**: Vite (schnell, ESNext)
 
-- **Kundenname**: Wird in Willkommensanimation angezeigt
-- **Willkommensnachricht**: Personalisierte Begrüßung
-- **Passwort**: Schütze dein Board vor unbefugtem Zugriff
-- **Signatur anzeigen**: Toggle für Branding in Kundenansicht
-- **Share-Link**: Automatisch generiert, mit Copy-Button
+## 🔗 Routing
 
----
+Die App nutzt Hash-basiertes Routing (keine externe Router-Library):
+
+- `/` oder `#/` → Home (Übersicht)
+- `#/board/{id}` → Board-Editor
+- `#/view/{id}` → Kundenansicht (Read-Only)
+
+## 🔒 Sicherheit
+
+**Hinweis**: Der Passwortschutz ist eine clientseitige Lösung (SHA-256 Hash) und bietet nur grundlegenden Schutz. Für sensible Daten sollte eine serverseitige Authentifizierung implementiert werden.
 
 ## 🌐 Deployment
 
-### Vercel (empfohlen)
+Die App ist statisch und kann auf jedem Hosting deployed werden:
 
-1. Push Code zu GitHub
-2. Importiere Repository auf [Vercel](https://vercel.com)
-3. Vercel erkennt automatisch Next.js
-4. Deploy!
-
-### Build für Production
+### Vercel
 ```bash
 npm run build
-npm start
+# Deploye den dist/-Ordner
 ```
 
----
-
-## 📂 Projektstruktur
-
-```
-mood_boards/
-├── src/
-│   ├── app/
-│   │   ├── page.tsx              # Startseite (Board-Übersicht)
-│   │   ├── layout.tsx            # Root Layout
-│   │   ├── globals.css           # Global Styles
-│   │   ├── board/[id]/           # Board-Detail (Edit-Modus)
-│   │   └── share/[id]/           # Kundenansicht (Read-Only)
-│   ├── components/
-│   │   ├── BoardCard.tsx         # Board-Kachel mit Preview
-│   │   ├── BoardDetail.tsx       # Board-Inhalte (Masonry)
-│   │   ├── BoardSettings.tsx     # Settings-Modal
-│   │   ├── ImageCard.tsx         # Bild mit Farbpalette
-│   │   ├── Note.tsx              # Notiz-Komponente
-│   │   ├── WelcomeAnimation.tsx  # Willkommensscreen
-│   │   ├── Signature.tsx         # Branding-Signatur
-│   │   └── SmoothScroller.tsx    # Lenis.js Wrapper
-│   ├── lib/
-│   │   └── BoardContext.tsx      # Global State Management
-│   └── types/
-│       └── index.ts              # TypeScript Interfaces
-└── package.json
+### Netlify
+```bash
+npm run build
+# Deploye den dist/-Ordner
 ```
 
----
+### GitHub Pages
+```bash
+npm run build
+# Deploye den dist/-Ordner zu gh-pages branch
+```
 
-## 🎯 Roadmap / Future Features
+## 🎯 Verwendung
 
-### 🟡 Geplant
-- [ ] **Sound-Integration** (Ambient-Sounds via Pixabay/Freesound API)
-- [ ] **Parallax-Effekte** beim Scrollen
-- [ ] **Gradient-Generator** aus Farbpaletten
-- [ ] **Export-Funktion** (PDF/Bild)
-- [ ] **Drag & Drop Reihenfolge** für Items
+### Board erstellen
+1. Auf "Neues Board" klicken
+2. Titel eingeben
+3. Board öffnet sich automatisch im Editor
 
-### 🔵 Nice-to-Have
-- [ ] **Supabase-Migration** (statt LocalStorage)
-- [ ] **Multi-User Support** mit Auth
-- [ ] **Analytics** für Kundenlinks (Wer hat wann geöffnet?)
-- [ ] **Board-Templates** für schnellen Start
-- [ ] **Bulk-Image-Upload**
+### Bilder hochladen
+1. Bilder per Drag & Drop in die Upload-Zone ziehen
+2. Oder "Bilder auswählen" Button verwenden
+3. Farbpalette wird automatisch extrahiert
 
----
+### Farb-Filter nutzen
+1. Auf eine Farb-Swatch klicken
+2. Bilder mit ähnlicher Farbe werden hervorgehoben
+3. Nochmal klicken zum Zurücksetzen
 
-## 🐛 Behobene Bugs
+### Board teilen
+1. Im Editor auf "Teilen" klicken
+2. Link wird in Zwischenablage kopiert
+3. Link an Kunden senden
 
-- ✅ **404-Fehler** bei direktem Board-Aufruf (useState-Initialisierung)
-- ✅ **LocalStorage Persistence** beim Refresh
-- ✅ **Responsive Layout** auf Mobile
+### Board-Einstellungen
+1. Im Editor auf "Einstellungen" klicken
+2. Titel und Willkommenstext anpassen
+3. Optional: Passwort setzen (TODO: Feature implementieren)
 
----
+## 📝 TODOs & Erweiterungen
 
-## 🤝 Credits
+Siehe `TASKS.md` für:
+- Geplante Features
+- Bekannte Einschränkungen
+- Verbesserungsmöglichkeiten
+- Erweiterungspunkte
 
-**Entwickelt von:** Mark Tietz & AI Assistant (Claude Sonnet 4.5)  
-**Design-Philosophie:** Minimalismus, Ästhetik, Funktion  
-**Font:** Geist Sans  
-**Inspiration:** Digital Artbook, Portfolio-Websites
+## 🧪 Tests
 
----
+```bash
+# Alle Tests ausführen
+npm test
+
+# Tests im Watch-Mode
+npm test -- --watch
+
+# Tests mit UI
+npm run test:ui
+```
+
+Aktuell getestet:
+- ✅ Color Extraction (Ähnlichkeitsberechnung)
+- ✅ Password Hashing (SHA-256)
+
+## 🤝 Beitragen
+
+Das Projekt ist optimiert für AI-Editierbarkeit:
+- Kleine, sprechende Module
+- JSDoc/TSDoc an Public-Funktionen
+- Klare Kommentare (Warum, nicht nur Was)
+- Sinnvolle Dateinamen, keine God-Files
 
 ## 📄 Lizenz
 
-Private Use - Mark Tietz Fotografie
+Privates Projekt für Mark Tietz Fotografie.
 
 ---
 
-## 💡 Tipps
+**Entwickelt mit ❤️ für minimalistische und schöne UX.**
 
-### Optimale Board-Präsentation
-- **Max. 15-20 Bilder** pro Board für beste Wirkung
-- **Konsistente Bildqualität** (min. 1920px Breite)
-- **Kurze, prägnante Notizen** statt lange Texte
-- **Farbpalette nutzen** für visuelle Story
-
-### Performance
-- **Base64-Limit beachten**: LocalStorage hat ca. 5-10MB Limit
-- **Für große Projekte**: Migration zu Supabase empfohlen
-- **Bildoptimierung**: Vor Upload komprimieren (z.B. TinyPNG)
-
----
-
-## 📞 Support
-
-Bei Fragen oder Problemen:
-- **Website:** [marktietz.de](https://www.marktietz.de)
-- **GitHub Issues:** Erstelle ein Issue im Repository
-
----
-
-**Made with ❤️ for creative professionals**
