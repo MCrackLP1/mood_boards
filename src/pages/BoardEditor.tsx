@@ -17,7 +17,7 @@ import { Modal } from '@/modules/ui/Modal';
 import { SmoothScroller } from '@/components/SmoothScroller';
 import { processImageFile } from '@/modules/assets/imageUpload';
 import { extractColors } from '@/modules/assets/colorExtraction';
-import { fetchLinkPreview } from '@/modules/links/linkPreview';
+import { fetchLinkPreview, isPinterestUrl, extractPinterestImage } from '@/modules/links/linkPreview';
 import { BoardItem, Section } from '@/types';
 import { ImageSearchResult } from '@/modules/images/providers/base';
 import { LibraryAsset } from '@/modules/library/types';
@@ -172,6 +172,65 @@ export function BoardEditor({ boardId, onBack, onShare }: BoardEditorProps) {
     
     setLinkLoading(true);
     try {
+      // Special handling for Pinterest URLs - add as image instead of link
+      if (isPinterestUrl(linkUrl)) {
+        const imageUrl = await extractPinterestImage(linkUrl);
+        
+        if (imageUrl) {
+          try {
+            // Use CORS proxy to fetch the image
+            const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(imageUrl)}`;
+            const response = await fetch(proxyUrl);
+            const blob = await response.blob();
+            const dataUrl = await new Promise<string>((resolve) => {
+              const reader = new FileReader();
+              reader.onloadend = () => resolve(reader.result as string);
+              reader.readAsDataURL(blob);
+            });
+            
+            // Extract colors from the image
+            const palette = await extractColors(dataUrl);
+            
+            // Add as image item with data URL (for offline use)
+            await addItem(boardId, {
+              type: 'image',
+              src: dataUrl,
+              palette,
+              section: currentSection.id,
+              meta: {
+                label: 'Pinterest',
+                description: linkUrl,
+              },
+            });
+            
+            setLinkUrl('');
+            setIsLinkModalOpen(false);
+            return;
+          } catch (error) {
+            console.error('Error processing Pinterest image:', error);
+            // Try adding with direct URL as fallback
+            await addItem(boardId, {
+              type: 'image',
+              src: imageUrl,
+              palette: [],
+              section: currentSection.id,
+              meta: {
+                label: 'Pinterest',
+                description: linkUrl,
+              },
+            });
+            
+            setLinkUrl('');
+            setIsLinkModalOpen(false);
+            return;
+          }
+        } else {
+          // If image extraction fails, fall back to regular link handling
+          console.warn('Could not extract Pinterest image, adding as link');
+        }
+      }
+      
+      // Regular link handling for non-Pinterest URLs or failed Pinterest extraction
       const preview = await fetchLinkPreview(linkUrl);
       
       await addItem(boardId, {

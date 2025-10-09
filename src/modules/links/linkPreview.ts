@@ -128,3 +128,59 @@ export function detectPlatform(url: string): string | null {
   return null;
 }
 
+/**
+ * Extracts direct image URL from Pinterest URL
+ */
+export async function extractPinterestImage(url: string): Promise<string | null> {
+  try {
+    // Check if it's already a direct pinimg URL
+    if (url.includes('pinimg.com')) {
+      return url;
+    }
+
+    // Try to fetch the Pinterest page and extract the image
+    const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(url)}`;
+    const response = await fetch(proxyUrl);
+    
+    if (!response.ok) {
+      return null;
+    }
+
+    const data = await response.json();
+    const html = data.contents;
+
+    // Look for various Pinterest image patterns
+    // Method 1: og:image meta tag (usually high quality)
+    const ogImage = extractMetaTag(html, 'og:image');
+    if (ogImage && (ogImage.includes('pinimg.com') || ogImage.includes('pinterest'))) {
+      return ogImage;
+    }
+
+    // Method 2: Look for direct image URLs in the HTML
+    const imageRegex = /https?:\/\/i\.pinimg\.com\/originals\/[^"'\s]+\.(jpg|jpeg|png|gif|webp)/gi;
+    const matches = html.match(imageRegex);
+    if (matches && matches.length > 0) {
+      return matches[0];
+    }
+
+    // Method 3: Look for 736x URLs (medium quality)
+    const mediumRegex = /https?:\/\/i\.pinimg\.com\/736x\/[^"'\s]+\.(jpg|jpeg|png|gif|webp)/gi;
+    const mediumMatches = html.match(mediumRegex);
+    if (mediumMatches && mediumMatches.length > 0) {
+      return mediumMatches[0];
+    }
+
+    return null;
+  } catch (error) {
+    console.error('Failed to extract Pinterest image:', error);
+    return null;
+  }
+}
+
+/**
+ * Check if URL is a Pinterest URL
+ */
+export function isPinterestUrl(url: string): boolean {
+  return url.includes('pinterest.com') || url.includes('pinimg.com');
+}
+
