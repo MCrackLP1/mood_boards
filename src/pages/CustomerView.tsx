@@ -269,6 +269,9 @@ export function CustomerView({ boardId }: CustomerViewProps) {
             />
           )}
 
+          {/* Checklist Zone - Moved up for prominence */}
+          <ChecklistCanvasZone items={items} />
+
           {/* Timeline Zone */}
           {timelineItems.length > 0 && (
             <TimelineCanvasZone 
@@ -277,18 +280,15 @@ export function CustomerView({ boardId }: CustomerViewProps) {
             />
           )}
 
+          {/* Notes Zone */}
+          <NotesZone items={getItemsBySection('notes')} />
+
           {/* Weather Badge */}
           <WeatherBadgeZone
             temp={22}
             condition="Sonnig"
             icon="☀️"
           />
-
-          {/* Notes Zone */}
-          <NotesZone items={getItemsBySection('notes')} />
-
-          {/* Checklist Zone */}
-          <ChecklistCanvasZone items={items} />
         </motion.div>
         
         {items.length === 0 && (

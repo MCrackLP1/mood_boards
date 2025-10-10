@@ -22,10 +22,6 @@ export function ChecklistCanvasZone({ items }: ChecklistCanvasZoneProps) {
     .flatMap(item => item.checklistItems || [])
     .sort((a, b) => a.order - b.order);
   
-  console.log('ChecklistCanvasZone - Total items:', items.length);
-  console.log('ChecklistCanvasZone - Checklist items found:', items.filter(item => item.type === 'checklist'));
-  console.log('ChecklistCanvasZone - All checklist items:', allChecklistItems);
-  
   if (allChecklistItems.length === 0) return null;
 
   return (
