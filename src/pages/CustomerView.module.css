@@ -89,12 +89,19 @@
   text-shadow: 0 2px 4px rgba(255, 255, 255, 0.5);
 }
 
-.audioControls {
+.headerActions {
   display: flex;
   align-items: center;
   justify-content: center;
   gap: var(--spacing-md);
   margin-top: var(--spacing-lg);
+  flex-wrap: wrap;
+}
+
+.audioControls {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-md);
 }
 
 .volumeControl {

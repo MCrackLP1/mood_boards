@@ -11,6 +11,7 @@ import { AssetLibrary } from '@/components/AssetLibrary';
 import { KeyboardHelp } from '@/components/KeyboardHelp';
 import { SectionManager } from '@/components/SectionManager';
 import { LayoutSwitcher } from '@/components/LayoutSwitcher';
+import { ExportPDFButton } from '@/components/ExportPDFButton';
 import { Button } from '@/modules/ui/Button';
 import { Input } from '@/modules/ui/Input';
 import { Modal } from '@/modules/ui/Modal';
@@ -356,6 +357,7 @@ export function BoardEditor({ boardId, onBack, onShare }: BoardEditorProps) {
           <Button variant="secondary" onClick={() => setIsSettingsOpen(true)}>
             Einstellungen
           </Button>
+          <ExportPDFButton boardId={boardId} variant="secondary" />
           <Button onClick={() => onShare(boardId)}>
             Teilen
           </Button>

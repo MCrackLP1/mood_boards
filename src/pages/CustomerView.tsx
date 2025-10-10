@@ -10,6 +10,7 @@ import { Board, BoardItem, Color } from '@/types';
 import { WelcomeAnimation } from '@/components/WelcomeAnimation';
 import { BrandingSignature } from '@/components/BrandingSignature';
 import { ImageLightbox } from '@/components/ImageLightbox';
+import { ExportPDFButton } from '@/components/ExportPDFButton';
 import { Button } from '@/modules/ui/Button';
 import { Input } from '@/modules/ui/Input';
 import { audioManager } from '@/modules/audio/audioManager';
@@ -217,31 +218,35 @@ export function CustomerView({ boardId }: CustomerViewProps) {
         <header className={styles.header}>
           <h1 className={styles.title}>{board.title}</h1>
           
-          {board.ambientSoundUrl && (
-            <div className={styles.audioControls}>
-              <Button 
-                variant="ghost" 
-                onClick={toggleAudio}
-                aria-label={isAudioPlaying ? 'Sound stoppen' : 'Sound abspielen'}
-              >
-                {isAudioPlaying ? '⏸ Sound' : '▶ Sound'}
-              </Button>
-              
-              {isAudioPlaying && (
-                <div className={styles.volumeControl}>
-                  <span>🔊</span>
-                  <input
-                    type="range"
-                    min="0"
-                    max="100"
-                    value={audioVolume * 100}
-                    onChange={(e) => handleVolumeChange(Number(e.target.value) / 100)}
-                    className={styles.volumeSlider}
-                  />
-                </div>
-              )}
-            </div>
-          )}
+          <div className={styles.headerActions}>
+            <ExportPDFButton boardId={boardId} variant="ghost" />
+            
+            {board.ambientSoundUrl && (
+              <div className={styles.audioControls}>
+                <Button 
+                  variant="ghost" 
+                  onClick={toggleAudio}
+                  aria-label={isAudioPlaying ? 'Sound stoppen' : 'Sound abspielen'}
+                >
+                  {isAudioPlaying ? '⏸ Sound' : '▶ Sound'}
+                </Button>
+                
+                {isAudioPlaying && (
+                  <div className={styles.volumeControl}>
+                    <span>🔊</span>
+                    <input
+                      type="range"
+                      min="0"
+                      max="100"
+                      value={audioVolume * 100}
+                      onChange={(e) => handleVolumeChange(Number(e.target.value) / 100)}
+                      className={styles.volumeSlider}
+                    />
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
         </header>
         
         <motion.div 
