@@ -18,9 +18,13 @@ export function ChecklistCanvasZone({ items }: ChecklistCanvasZoneProps) {
   
   // Get all checklist items from all checklist boards
   const allChecklistItems = items
-    .filter(item => item.type === 'checklist' && item.checklistItems)
+    .filter(item => item.type === 'checklist' && item.checklistItems && item.checklistItems.length > 0)
     .flatMap(item => item.checklistItems || [])
     .sort((a, b) => a.order - b.order);
+  
+  console.log('ChecklistCanvasZone - Total items:', items.length);
+  console.log('ChecklistCanvasZone - Checklist items found:', items.filter(item => item.type === 'checklist'));
+  console.log('ChecklistCanvasZone - All checklist items:', allChecklistItems);
   
   if (allChecklistItems.length === 0) return null;
 
