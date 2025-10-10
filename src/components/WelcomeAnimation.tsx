@@ -38,25 +38,36 @@ export function WelcomeAnimation({ welcomeText, onComplete }: WelcomeAnimationPr
           exit={{ opacity: 0 }}
           transition={{ duration: 0.3 }}
         >
-          {/* Camera Aperture Blades */}
+          {/* Camera Aperture/Iris with Blades */}
           {step === 2 && (
-            <div className={styles.apertureContainer}>
-              {[...Array(8)].map((_, i) => (
-                <motion.div
-                  key={i}
-                  className={styles.apertureBlade}
-                  style={{
-                    transform: `rotate(${i * 45}deg)`,
-                  }}
-                  initial={{ scaleY: 1 }}
-                  animate={{ scaleY: 0 }}
-                  transition={{
-                    duration: 1.2,
-                    ease: [0.65, 0, 0.35, 1],
-                    delay: 0.1,
-                  }}
-                />
-              ))}
+            <div className={styles.irisContainer}>
+              {[...Array(6)].map((_, i) => {
+                const rotation = (i * 360) / 6;
+                return (
+                  <motion.div
+                    key={i}
+                    className={styles.irisBlade}
+                    style={{
+                      transform: `rotate(${rotation}deg)`,
+                    }}
+                    initial={{ 
+                      x: '-50%',
+                      y: 0,
+                      scaleX: 1,
+                    }}
+                    animate={{ 
+                      x: '-50%',
+                      y: -2000,
+                      scaleX: 0.5,
+                    }}
+                    transition={{
+                      duration: 1.4,
+                      ease: [0.85, 0, 0.15, 1],
+                      delay: 0.1,
+                    }}
+                  />
+                );
+              })}
             </div>
           )}
           

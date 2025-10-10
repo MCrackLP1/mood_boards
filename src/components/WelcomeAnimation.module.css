@@ -40,38 +40,47 @@
   letter-spacing: -0.02em;
 }
 
-/* Camera Aperture Animation */
-.apertureContainer {
+/* Camera Iris Animation - Realistic blade mechanism */
+.irisContainer {
   position: absolute;
   top: 50%;
   left: 50%;
-  transform: translate(-50%, -50%);
   width: 100%;
   height: 100%;
+  transform: translate(-50%, -50%);
   z-index: 100;
   pointer-events: none;
+  overflow: hidden;
 }
 
-.apertureBlade {
+.irisBlade {
   position: absolute;
-  top: 0;
+  top: 50%;
   left: 50%;
-  width: 120%;
-  height: 120%;
+  width: 150%;
+  height: 150%;
+  transform-origin: 50% 0%;
   background: linear-gradient(
     180deg,
-    rgba(26, 26, 26, 1) 0%,
-    rgba(26, 26, 26, 0.98) 40%,
-    rgba(26, 26, 26, 0.95) 100%
+    rgba(20, 20, 20, 1) 0%,
+    rgba(30, 30, 30, 0.98) 30%,
+    rgba(26, 26, 26, 0.95) 60%,
+    rgba(20, 20, 20, 0.9) 100%
   );
-  transform-origin: center center;
-  will-change: transform;
+  clip-path: polygon(
+    40% 0%,
+    60% 0%,
+    100% 100%,
+    0% 100%
+  );
   box-shadow: 
-    0 0 50px rgba(0, 0, 0, 0.8),
-    inset 0 0 30px rgba(0, 0, 0, 0.5);
+    inset -2px 0 8px rgba(0, 0, 0, 0.5),
+    inset 2px 0 8px rgba(0, 0, 0, 0.5),
+    0 0 20px rgba(0, 0, 0, 0.8);
+  will-change: transform;
 }
 
-.apertureBlade::before {
+.irisBlade::after {
   content: '';
   position: absolute;
   top: 0;
@@ -80,10 +89,13 @@
   bottom: 0;
   background: linear-gradient(
     90deg,
-    transparent 0%,
-    rgba(255, 255, 255, 0.03) 50%,
-    transparent 100%
+    rgba(255, 255, 255, 0) 0%,
+    rgba(255, 255, 255, 0.02) 30%,
+    rgba(255, 255, 255, 0.04) 50%,
+    rgba(255, 255, 255, 0.02) 70%,
+    rgba(255, 255, 255, 0) 100%
   );
+  pointer-events: none;
 }
 
 /* Lens Flare Effect */
@@ -122,9 +134,8 @@
     margin-top: 1rem;
   }
   
-  .apertureBlade {
-    width: 150%;
-    height: 150%;
+  .irisContainer {
+    /* Mobile optimization */
   }
 }
 
