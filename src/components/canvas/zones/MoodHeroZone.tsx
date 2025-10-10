@@ -17,11 +17,11 @@ interface MoodHeroZoneProps {
 }
 
 export function MoodHeroZone({ items, onImageClick }: MoodHeroZoneProps) {
-  const imageItems = items.filter(i => i.type === 'image').slice(0, 10);
+  const imageItems = items.filter(i => i.type === 'image');
   
   if (imageItems.length === 0) return null;
 
-  const rotations = [-2, 1, -1, 2, -1.5, 1.5, -0.5, 0.5, -2.5, 1];
+  const rotations = [-2, 1, -1, 2, -1.5, 1.5, -0.5, 0.5, -2.5, 1, -1.8, 0.8, -2.2, 1.2, -0.7, 1.7];
 
   return (
     <motion.div

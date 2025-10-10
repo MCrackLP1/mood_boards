@@ -21,7 +21,7 @@ export function CanvasReveal({ items, onReveal }: CanvasRevealProps) {
   const [videoEnded, setVideoEnded] = useState(false);
   
   // Filter out location images - only show non-location images in the scrambled view
-  const imageItems = items.filter(i => i.type === 'image' && (i.section || 'general') !== 'location').slice(0, 15);
+  const imageItems = items.filter(i => i.type === 'image' && (i.section || 'general') !== 'location');
   
   const handleVideoLoad = (e: React.SyntheticEvent<HTMLVideoElement>) => {
     // Slow down video to 85% speed

@@ -16,11 +16,11 @@ interface LocationZoneProps {
 }
 
 export function LocationZone({ items, onImageClick }: LocationZoneProps) {
-  const imageItems = items.filter(i => i.type === 'image').slice(0, 5);
+  const imageItems = items.filter(i => i.type === 'image');
   
   if (imageItems.length === 0) return null;
 
-  const rotations = [-1.5, 2, -2.5, 1, -0.5];
+  const rotations = [-1.5, 2, -2.5, 1, -0.5, 1.8, -1.2, 2.2, -0.8, 1.3, -2.8, 0.9];
 
   return (
     <motion.div
