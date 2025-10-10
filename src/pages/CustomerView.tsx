@@ -261,16 +261,11 @@ export function CustomerView({ boardId }: CustomerViewProps) {
             <ColorStripeZone colors={uniqueColors} />
           )}
 
-          {/* Location Zone - Shows images from 'location' section */}
-          {getItemsBySection('location').filter(i => i.type === 'image').length > 0 && (
-            <LocationZone
-              items={getItemsBySection('location')}
-              onImageClick={handleImageClick}
-            />
-          )}
-
-          {/* Checklist Zone - Moved up for prominence */}
+          {/* Checklist Zone - Prominent placement for task overview */}
           <ChecklistCanvasZone items={items} />
+
+          {/* Notes Zone - More prominent for important information */}
+          <NotesZone items={getItemsBySection('notes')} />
 
           {/* Timeline Zone */}
           {timelineItems.length > 0 && (
@@ -280,10 +275,15 @@ export function CustomerView({ boardId }: CustomerViewProps) {
             />
           )}
 
-          {/* Notes Zone */}
-          <NotesZone items={getItemsBySection('notes')} />
+          {/* Location Zone - Shows images from 'location' section */}
+          {getItemsBySection('location').filter(i => i.type === 'image').length > 0 && (
+            <LocationZone
+              items={getItemsBySection('location')}
+              onImageClick={handleImageClick}
+            />
+          )}
 
-          {/* Weather Badge */}
+          {/* Weather Badge - Integrated with content flow */}
           <WeatherBadgeZone
             temp={22}
             condition="Sonnig"

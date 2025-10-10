@@ -19,6 +19,19 @@ export function TimelineCanvasZone({ items, shootingDuration }: TimelineCanvasZo
   
   if (items.length === 0) return null;
 
+  // Get icon based on time of day
+  const getTimeIcon = (time: string): string => {
+    const hour = parseInt(time.split(':')[0]);
+    
+    if (hour >= 5 && hour < 9) return '🌅'; // Early morning
+    if (hour >= 9 && hour < 12) return '☀️'; // Morning
+    if (hour >= 12 && hour < 17) return '🌤️'; // Afternoon
+    if (hour >= 17 && hour < 20) return '🌆'; // Evening
+    if (hour >= 20 || hour < 5) return '🌙'; // Night
+    
+    return '⏰'; // Default
+  };
+
   return (
     <motion.div
       ref={ref}
@@ -75,6 +88,7 @@ export function TimelineCanvasZone({ items, shootingDuration }: TimelineCanvasZo
                 }}
               />
               <div className={styles.content}>
+                <div className={styles.itemIcon}>{getTimeIcon(item.time)}</div>
                 <div className={styles.time}>{item.time}</div>
                 <div className={styles.location}>{item.location}</div>
                 {item.description && (

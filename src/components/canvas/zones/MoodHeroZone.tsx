@@ -22,6 +22,12 @@ export function MoodHeroZone({ items, onImageClick }: MoodHeroZoneProps) {
   if (imageItems.length === 0) return null;
 
   const rotations = [-2, 1, -1, 2, -1.5, 1.5, -0.5, 0.5, -2.5, 1, -1.8, 0.8, -2.2, 1.2, -0.7, 1.7];
+  
+  // Size pattern for magazine-style layout: creates visual rhythm
+  const getSizeClass = (index: number): string => {
+    const pattern = ['sizeMedium', 'sizeSmall', 'sizeLarge', 'sizeMedium', 'sizeMedium', 'sizeSmall', 'sizeLarge', 'sizeMedium'];
+    return styles[pattern[index % pattern.length]];
+  };
 
   return (
     <motion.div
@@ -40,7 +46,7 @@ export function MoodHeroZone({ items, onImageClick }: MoodHeroZoneProps) {
         {imageItems.map((item, index) => (
           <motion.div
             key={item.id}
-            className={styles.masonryItem}
+            className={`${styles.masonryItem} ${getSizeClass(index)}`}
             variants={staggerItem}
           >
             <PolaroidFrame
