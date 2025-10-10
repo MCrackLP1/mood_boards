@@ -3,8 +3,7 @@
  * Displays checklist items in customer view
  */
 
-import { motion, useInView } from 'framer-motion';
-import { useRef } from 'react';
+import { motion } from 'framer-motion';
 import { BoardItem } from '@/types';
 import styles from './ChecklistCanvasZone.module.css';
 
@@ -13,9 +12,6 @@ interface ChecklistCanvasZoneProps {
 }
 
 export function ChecklistCanvasZone({ items }: ChecklistCanvasZoneProps) {
-  const ref = useRef(null);
-  const isInView = useInView(ref, { once: true, amount: 0.1 });
-  
   // Get all checklist items from all checklist boards
   const allChecklistItems = items
     .filter(item => item.type === 'checklist' && item.checklistItems && item.checklistItems.length > 0)
@@ -26,7 +22,6 @@ export function ChecklistCanvasZone({ items }: ChecklistCanvasZoneProps) {
 
   return (
     <motion.div
-      ref={ref}
       className={styles.zone}
       initial={{ opacity: 1, y: 0 }}
       animate={{ opacity: 1, y: 0 }}
