@@ -1,8 +1,9 @@
 /**
- * Lightbox component for fullscreen image view
+ * Lightbox component for fullscreen image view with swipe gestures
  */
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
+import { motion, PanInfo } from 'framer-motion';
 import { BoardItem } from '@/types';
 import { ColorPalette } from './ColorPalette';
 import styles from './ImageLightbox.module.css';
@@ -15,6 +16,8 @@ interface ImageLightboxProps {
 }
 
 export function ImageLightbox({ item, onClose, onNext, onPrev }: ImageLightboxProps) {
+  const [dragOffset, setDragOffset] = useState(0);
+  
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') onClose();
@@ -30,6 +33,18 @@ export function ImageLightbox({ item, onClose, onNext, onPrev }: ImageLightboxPr
       document.body.style.overflow = '';
     };
   }, [onClose, onNext, onPrev]);
+  
+  const handleDragEnd = (_event: any, info: PanInfo) => {
+    const swipeThreshold = 50; // pixels
+    
+    if (info.offset.x > swipeThreshold && onPrev) {
+      onPrev();
+    } else if (info.offset.x < -swipeThreshold && onNext) {
+      onNext();
+    }
+    
+    setDragOffset(0);
+  };
   
   return (
     <div className={styles.overlay} onClick={onClose}>
@@ -57,11 +72,21 @@ export function ImageLightbox({ item, onClose, onNext, onPrev }: ImageLightboxPr
         </button>
       )}
       
-      <div className={styles.content} onClick={(e) => e.stopPropagation()}>
+      <motion.div 
+        className={styles.content} 
+        onClick={(e) => e.stopPropagation()}
+        drag="x"
+        dragConstraints={{ left: 0, right: 0 }}
+        dragElastic={0.2}
+        onDrag={(_event, info) => setDragOffset(info.offset.x)}
+        onDragEnd={handleDragEnd}
+        style={{ x: dragOffset }}
+      >
         <img 
           src={item.src} 
           alt={item.meta?.label || 'Bild'}
           className={styles.image}
+          draggable={false}
         />
         
         <div className={styles.meta}>
@@ -79,7 +104,7 @@ export function ImageLightbox({ item, onClose, onNext, onPrev }: ImageLightboxPr
             </div>
           )}
         </div>
-      </div>
+      </motion.div>
     </div>
   );
 }

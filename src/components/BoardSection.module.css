@@ -259,18 +259,22 @@
   .header {
     flex-direction: column;
     align-items: flex-start;
+    gap: var(--spacing-sm);
   }
   
   .actions {
     width: 100%;
+    flex-wrap: wrap;
   }
   
   .actions button {
     flex: 1;
+    min-width: 120px;
   }
   
   .imageGrid {
-    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: var(--spacing-md);
   }
 
   .imageGrid.masonry {
@@ -282,6 +286,17 @@
   }
 
   .linksGrid.masonry {
+    column-count: 1;
+  }
+}
+
+@media (max-width: 480px) {
+  .imageGrid {
+    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+    gap: var(--spacing-sm);
+  }
+  
+  .imageGrid.masonry {
     column-count: 1;
   }
 }

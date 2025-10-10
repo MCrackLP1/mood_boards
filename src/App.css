@@ -137,4 +137,14 @@ button {
   font-family: inherit;
 }
 
+/* Mobile-specific improvements */
+@media (max-width: 640px) {
+  :root {
+    /* Larger fonts for better readability on small screens */
+    --font-size-xs: 0.875rem; /* 14px */
+    --font-size-sm: 0.9375rem; /* 15px */
+    --font-size-base: 1rem; /* 16px */
+  }
+}
+
 
