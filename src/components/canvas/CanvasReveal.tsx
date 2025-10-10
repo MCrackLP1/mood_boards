@@ -19,7 +19,8 @@ export function CanvasReveal({ items, onReveal }: CanvasRevealProps) {
   const [hasScrolled, setHasScrolled] = useState(false);
   const [showOverlay, setShowOverlay] = useState(false);
   
-  const imageItems = items.filter(i => i.type === 'image').slice(0, 15);
+  // Filter out location images - only show non-location images in the scrambled view
+  const imageItems = items.filter(i => i.type === 'image' && (i.section || 'general') !== 'location').slice(0, 15);
   
   // Listen for scroll
   useEffect(() => {
