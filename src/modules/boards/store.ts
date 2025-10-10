@@ -96,7 +96,7 @@ export const useBoardStore = create<BoardStore>((set, get) => ({
       layoutMode: 'grid',
     };
 
-    // Save to Supabase first
+    // Save to Supabase FIRST - this is the source of truth
     try {
       const { error } = await supabase.from('boards').insert({
         id: board.id,
@@ -109,21 +109,26 @@ export const useBoardStore = create<BoardStore>((set, get) => ({
         layout_mode: board.layoutMode,
       });
 
-      if (error) throw error;
-    } catch (error) {
-      console.error('Failed to save board to Supabase:', error);
-    }
+      if (error) {
+        console.error('Supabase insert error:', error);
+        throw new Error(`Board konnte nicht gespeichert werden: ${error.message}`);
+      }
 
-    // Always save to IndexedDB for offline access
-    await db.boards.add(board);
-    set({ boards: [board, ...get().boards] });
-    return board;
+      // Only cache to IndexedDB if Supabase succeeded
+      await db.boards.add(board);
+      set({ boards: [board, ...get().boards] });
+      return board;
+    } catch (error: any) {
+      console.error('Failed to create board:', error);
+      alert(`Fehler beim Erstellen des Boards: ${error.message}\n\nBitte stelle sicher, dass du online bist.`);
+      throw error;
+    }
   },
   
   updateBoard: async (id: string, updates: Partial<Board>) => {
     const updatedData = { ...updates, updatedAt: Date.now() };
 
-    // Update Supabase
+    // Update Supabase FIRST
     try {
       const supabaseUpdates: any = {};
       if (updates.title) supabaseUpdates.title = updates.title;
@@ -133,6 +138,7 @@ export const useBoardStore = create<BoardStore>((set, get) => ({
       if (updates.ambientSoundUrl !== undefined) supabaseUpdates.ambient_sound_url = updates.ambientSoundUrl;
       if (updates.customSections !== undefined) supabaseUpdates.custom_sections = updates.customSections;
       if (updates.layoutMode !== undefined) supabaseUpdates.layout_mode = updates.layoutMode;
+      if (updates.shootingDuration !== undefined) supabaseUpdates.shooting_duration = updates.shootingDuration;
       supabaseUpdates.updated_at = updatedData.updatedAt;
 
       const { error } = await supabase
@@ -140,20 +146,25 @@ export const useBoardStore = create<BoardStore>((set, get) => ({
         .update(supabaseUpdates)
         .eq('id', id);
 
-      if (error) throw error;
-    } catch (error) {
-      console.error('Failed to update board in Supabase:', error);
-    }
+      if (error) {
+        console.error('Supabase update error:', error);
+        throw new Error(`Board konnte nicht aktualisiert werden: ${error.message}`);
+      }
 
-    // Update IndexedDB
-    await db.boards.update(id, updatedData);
-    const board = await db.boards.get(id);
-    if (!board) throw new Error('Board not found');
-    
-    set({
-      boards: get().boards.map(b => b.id === id ? board : b),
-      currentBoard: get().currentBoard?.id === id ? board : get().currentBoard,
-    });
+      // Only cache to IndexedDB if Supabase succeeded
+      await db.boards.update(id, updatedData);
+      const board = await db.boards.get(id);
+      if (!board) throw new Error('Board not found');
+      
+      set({
+        boards: get().boards.map(b => b.id === id ? board : b),
+        currentBoard: get().currentBoard?.id === id ? board : get().currentBoard,
+      });
+    } catch (error: any) {
+      console.error('Failed to update board:', error);
+      alert(`Fehler beim Speichern: ${error.message}\n\nBitte stelle sicher, dass du online bist.`);
+      throw error;
+    }
   },
   
   deleteBoard: async (id: string) => {
@@ -314,7 +325,7 @@ export const useBoardStore = create<BoardStore>((set, get) => ({
       order: maxOrder + 1,
     };
 
-    // Save to Supabase
+    // Save to Supabase FIRST
     try {
       const { error } = await supabase.from('board_items').insert({
         id: newItem.id,
@@ -333,19 +344,24 @@ export const useBoardStore = create<BoardStore>((set, get) => ({
         timeline_items: newItem.timelineItems as any,
       });
 
-      if (error) throw error;
-    } catch (error) {
-      console.error('Failed to save item to Supabase:', error);
-    }
+      if (error) {
+        console.error('Supabase insert error:', error);
+        throw new Error(`Item konnte nicht gespeichert werden: ${error.message}`);
+      }
 
-    // Save to IndexedDB
-    await db.items.add(newItem);
-    set({ currentItems: [...get().currentItems, newItem] });
-    return newItem;
+      // Only cache to IndexedDB if Supabase succeeded
+      await db.items.add(newItem);
+      set({ currentItems: [...get().currentItems, newItem] });
+      return newItem;
+    } catch (error: any) {
+      console.error('Failed to add item:', error);
+      alert(`Fehler beim Hinzufügen: ${error.message}\n\nBitte stelle sicher, dass du online bist.`);
+      throw error;
+    }
   },
   
   updateItem: async (id: string, updates: Partial<BoardItem>) => {
-    // Update Supabase
+    // Update Supabase FIRST
     try {
       const supabaseUpdates: any = {};
       if (updates.type) supabaseUpdates.type = updates.type;
@@ -365,39 +381,49 @@ export const useBoardStore = create<BoardStore>((set, get) => ({
         .update(supabaseUpdates)
         .eq('id', id);
 
-      if (error) throw error;
-    } catch (error) {
-      console.error('Failed to update item in Supabase:', error);
-    }
+      if (error) {
+        console.error('Supabase update error:', error);
+        throw new Error(`Item konnte nicht aktualisiert werden: ${error.message}`);
+      }
 
-    // Update IndexedDB
-    await db.items.update(id, updates);
-    const updatedItem = await db.items.get(id);
-    if (!updatedItem) throw new Error('Item not found');
-    
-    set({
-      currentItems: get().currentItems.map(item => 
-        item.id === id ? updatedItem : item
-      ),
-    });
+      // Only cache to IndexedDB if Supabase succeeded
+      await db.items.update(id, updates);
+      const updatedItem = await db.items.get(id);
+      if (!updatedItem) throw new Error('Item not found');
+      
+      set({
+        currentItems: get().currentItems.map(item => 
+          item.id === id ? updatedItem : item
+        ),
+      });
+    } catch (error: any) {
+      console.error('Failed to update item:', error);
+      // Silent fail for updates (could be bulk operations)
+      throw error;
+    }
   },
   
   deleteItem: async (id: string) => {
-    // Delete from Supabase
+    // Delete from Supabase FIRST
     try {
       const { error } = await supabase
         .from('board_items')
         .delete()
         .eq('id', id);
 
-      if (error) throw error;
-    } catch (error) {
-      console.error('Failed to delete item from Supabase:', error);
-    }
+      if (error) {
+        console.error('Supabase delete error:', error);
+        throw new Error(`Item konnte nicht gelöscht werden: ${error.message}`);
+      }
 
-    // Delete from IndexedDB
-    await db.items.delete(id);
-    set({ currentItems: get().currentItems.filter(i => i.id !== id) });
+      // Only remove from IndexedDB cache if Supabase succeeded
+      await db.items.delete(id);
+      set({ currentItems: get().currentItems.filter(i => i.id !== id) });
+    } catch (error: any) {
+      console.error('Failed to delete item:', error);
+      alert(`Fehler beim Löschen: ${error.message}\n\nBitte stelle sicher, dass du online bist.`);
+      throw error;
+    }
   },
 
   reorderItems: async (itemIds: string[]) => {
