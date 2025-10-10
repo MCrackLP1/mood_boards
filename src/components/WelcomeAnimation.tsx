@@ -38,34 +38,17 @@ export function WelcomeAnimation({ welcomeText, onComplete }: WelcomeAnimationPr
           exit={{ opacity: 0 }}
           transition={{ duration: 0.3 }}
         >
-          {/* Cinematic Wipe Transition (like film curtains) */}
+          {/* Simple fade overlay - clean and modern */}
           {step === 2 && (
-            <>
-              {/* Left curtain */}
-              <motion.div
-                className={styles.curtain}
-                style={{ left: 0 }}
-                initial={{ x: '0%' }}
-                animate={{ x: '-100%' }}
-                transition={{
-                  duration: 1.2,
-                  ease: [0.76, 0, 0.24, 1],
-                  delay: 0.1,
-                }}
-              />
-              {/* Right curtain */}
-              <motion.div
-                className={styles.curtain}
-                style={{ right: 0 }}
-                initial={{ x: '0%' }}
-                animate={{ x: '100%' }}
-                transition={{
-                  duration: 1.2,
-                  ease: [0.76, 0, 0.24, 1],
-                  delay: 0.1,
-                }}
-              />
-            </>
+            <motion.div
+              className={styles.fadeOverlay}
+              initial={{ opacity: 1 }}
+              animate={{ opacity: 0 }}
+              transition={{
+                duration: 0.8,
+                ease: "easeInOut",
+              }}
+            />
           )}
           
           {/* Text Content */}
