@@ -19,6 +19,7 @@ export interface Board {
   ambientSoundUrl?: string; // Optional ambient sound URL
   customSections?: Section[]; // Custom user-defined sections
   layoutMode?: 'grid' | 'masonry' | 'single-column'; // Layout preference
+  shootingDuration?: string; // Shooting duration e.g. "4 Stunden"
 }
 
 export interface Section {

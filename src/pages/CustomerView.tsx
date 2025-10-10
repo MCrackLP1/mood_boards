@@ -270,7 +270,10 @@ export function CustomerView({ boardId }: CustomerViewProps) {
 
           {/* Timeline Zone */}
           {timelineItems.length > 0 && (
-            <TimelineCanvasZone items={timelineItems} />
+            <TimelineCanvasZone 
+              items={timelineItems} 
+              shootingDuration={board.shootingDuration}
+            />
           )}
 
           {/* Weather Badge */}

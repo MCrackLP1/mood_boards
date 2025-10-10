@@ -48,6 +48,7 @@ export function BoardEditor({ boardId, onBack, onShare }: BoardEditorProps) {
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [boardTitle, setBoardTitle] = useState('');
   const [welcomeText, setWelcomeText] = useState('');
+  const [shootingDuration, setShootingDuration] = useState('');
   const [lightboxItem, setLightboxItem] = useState<BoardItem | null>(null);
   const [isImageSearchOpen, setIsImageSearchOpen] = useState(false);
   const [isLibraryOpen, setIsLibraryOpen] = useState(false);
@@ -66,6 +67,7 @@ export function BoardEditor({ boardId, onBack, onShare }: BoardEditorProps) {
     if (currentBoard) {
       setBoardTitle(currentBoard.title);
       setWelcomeText(currentBoard.welcomeText);
+      setShootingDuration(currentBoard.shootingDuration || '');
     }
   }, [currentBoard]);
   
@@ -95,6 +97,7 @@ export function BoardEditor({ boardId, onBack, onShare }: BoardEditorProps) {
     updateBoard(boardId, {
       title: boardTitle,
       welcomeText,
+      shootingDuration,
     });
     setIsSettingsOpen(false);
   };
@@ -409,6 +412,13 @@ export function BoardEditor({ boardId, onBack, onShare }: BoardEditorProps) {
             value={welcomeText}
             onChange={(e) => setWelcomeText(e.target.value)}
             placeholder="z.B. Hi Lisa & Tom – hier ist meine Vision ✨"
+          />
+          
+          <Input
+            label="Shooting-Dauer"
+            value={shootingDuration}
+            onChange={(e) => setShootingDuration(e.target.value)}
+            placeholder="z.B. 4 Stunden, 2-3 Stunden, Ganzer Tag"
           />
           
           <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end', marginTop: '0.5rem' }}>
