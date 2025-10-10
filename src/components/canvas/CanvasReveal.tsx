@@ -1,6 +1,6 @@
 /**
  * Canvas Reveal Component
- * Initial scattered view that animates into organized zones
+ * Images appear from center over the video background
  */
 
 import { useState, useEffect } from 'react';
@@ -17,7 +17,7 @@ interface CanvasRevealProps {
 export function CanvasReveal({ items, onReveal }: CanvasRevealProps) {
   const [scattered, setScattered] = useState(true);
   const [hasScrolled, setHasScrolled] = useState(false);
-  const [showOverlay, setShowOverlay] = useState(false);
+  const [videoError, setVideoError] = useState(false);
   
   // Filter out location images - only show non-location images in the scrambled view
   const imageItems = items.filter(i => i.type === 'image' && (i.section || 'general') !== 'location').slice(0, 15);
@@ -36,14 +36,12 @@ export function CanvasReveal({ items, onReveal }: CanvasRevealProps) {
   }, [hasScrolled]);
   
   const handleReveal = () => {
-    // Start overlay immediately
-    setShowOverlay(true);
-    // Start exit animation after short delay
-    setTimeout(() => setScattered(false), 300);
+    // Start exit animation
+    setScattered(false);
     // Complete reveal after animations
     setTimeout(() => {
       onReveal();
-    }, 1000);
+    }, 1500);
   };
   
   // Generate random positions for scattered state
@@ -62,18 +60,29 @@ export function CanvasReveal({ items, onReveal }: CanvasRevealProps) {
   
   return (
     <>
-      {/* Transition Overlay */}
-      <AnimatePresence>
-        {showOverlay && (
-          <motion.div
-            className={styles.overlay}
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.5 }}
-          />
+      {/* Video Background - continues from WelcomeAnimation */}
+      <motion.div
+        className={styles.videoBackground}
+        initial={{ opacity: 1 }}
+        animate={!scattered ? { opacity: 0 } : { opacity: 1 }}
+        transition={{ duration: 1.5, delay: 0.5 }}
+      >
+        {!videoError ? (
+          <video
+            className={styles.video}
+            autoPlay
+            loop
+            muted
+            playsInline
+            onError={() => setVideoError(true)}
+          >
+            <source src="/videos/welcome-background.mp4" type="video/mp4" />
+            <source src="/videos/welcome-background.webm" type="video/webm" />
+          </video>
+        ) : (
+          <div className={styles.gradientFallback} />
         )}
-      </AnimatePresence>
+      </motion.div>
       
       <AnimatePresence>
         {scattered && (
@@ -82,6 +91,7 @@ export function CanvasReveal({ items, onReveal }: CanvasRevealProps) {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
+            transition={{ duration: 0.6 }}
           >
           <div className={styles.scattered}>
             <motion.h2

@@ -4,12 +4,65 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
   z-index: 9999;
   display: flex;
   align-items: center;
   justify-content: center;
   overflow: hidden;
+  background: #000;
+}
+
+/* Video Background */
+.videoContainer {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 1;
+}
+
+.video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+}
+
+/* Animated Gradient Fallback */
+.gradientFallback {
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    45deg,
+    #1a1a1a 0%,
+    #2d2d2d 25%,
+    #1a1a1a 50%,
+    #2d2d2d 75%,
+    #1a1a1a 100%
+  );
+  background-size: 400% 400%;
+  animation: gradientShift 15s ease infinite;
+}
+
+@keyframes gradientShift {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+}
+
+/* Dark overlay for better text readability */
+.videoOverlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: radial-gradient(
+    circle at center,
+    rgba(0, 0, 0, 0.3) 0%,
+    rgba(0, 0, 0, 0.6) 100%
+  );
+  z-index: 2;
 }
 
 .content {
@@ -26,8 +79,9 @@
   font-weight: 400;
   letter-spacing: 0.15em;
   text-transform: uppercase;
-  color: rgba(255, 255, 255, 0.7);
+  color: rgba(255, 255, 255, 0.9);
   margin-bottom: 1rem;
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.8);
 }
 
 .greeting {
@@ -38,39 +92,7 @@
   margin-top: 1.5rem;
   line-height: 1.2;
   letter-spacing: -0.02em;
-}
-
-/* Simple fade overlay */
-.fadeOverlay {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
-  z-index: 100;
-  pointer-events: none;
-}
-
-/* Lens Flare Effect */
-.lensFlare {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  width: 200px;
-  height: 200px;
-  background: radial-gradient(
-    circle,
-    rgba(255, 255, 255, 0.8) 0%,
-    rgba(255, 255, 255, 0.4) 20%,
-    rgba(147, 197, 253, 0.2) 40%,
-    transparent 70%
-  );
-  border-radius: 50%;
-  filter: blur(20px);
-  pointer-events: none;
-  z-index: 50;
+  text-shadow: 0 4px 20px rgba(0, 0, 0, 0.9);
 }
 
 /* Mobile Optimization */
@@ -86,10 +108,6 @@
   
   .greeting {
     margin-top: 1rem;
-  }
-  
-  .irisContainer {
-    /* Mobile optimization */
   }
 }
 

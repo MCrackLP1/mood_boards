@@ -1,12 +1,39 @@
-.overlay {
+/* Video Background */
+.videoBackground {
   position: fixed;
   top: 0;
   left: 0;
   right: 0;
   bottom: 0;
-  background: var(--canvas-bg);
-  z-index: 999;
-  pointer-events: none;
+  z-index: 998;
+  overflow: hidden;
+}
+
+.video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+}
+
+.gradientFallback {
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    45deg,
+    #1a1a1a 0%,
+    #2d2d2d 25%,
+    #1a1a1a 50%,
+    #2d2d2d 75%,
+    #1a1a1a 100%
+  );
+  background-size: 400% 400%;
+  animation: gradientShift 15s ease infinite;
+}
+
+@keyframes gradientShift {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
 }
 
 .container {
@@ -15,7 +42,6 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background: var(--canvas-bg);
   z-index: 1000;
   overflow: hidden;
 }
@@ -68,6 +94,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  z-index: 10;
 }
 
 .item {

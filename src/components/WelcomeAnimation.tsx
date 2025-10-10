@@ -1,10 +1,10 @@
 /**
  * Welcome animation component for customer view
- * Displays branding with cinematic camera aperture reveal
+ * Displays branding with video background
  */
 
 import { useEffect, useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import styles from './WelcomeAnimation.module.css';
 
 interface WelcomeAnimationProps {
@@ -13,84 +13,78 @@ interface WelcomeAnimationProps {
 }
 
 export function WelcomeAnimation({ welcomeText, onComplete }: WelcomeAnimationProps) {
-  const [step, setStep] = useState(0); // 0: branding, 1: greeting, 2: aperture opening, 3: complete
+  const [step, setStep] = useState(0); // 0: branding, 1: greeting, 2: fade text
+  const [videoError, setVideoError] = useState(false);
   
   useEffect(() => {
-    const timer1 = setTimeout(() => setStep(1), 1200);    // Show greeting after 1.2s
-    const timer2 = setTimeout(() => setStep(2), 3500);    // Start aperture at 3.5s (text visible longer)
-    const timer3 = setTimeout(() => setStep(3), 5000);    // Complete at 5s
-    const timer4 = setTimeout(() => onComplete(), 5100);  // Callback slightly after
+    const timer1 = setTimeout(() => setStep(1), 1200);   // Show greeting after 1.2s
+    const timer2 = setTimeout(() => setStep(2), 3500);   // Fade text at 3.5s
+    const timer3 = setTimeout(() => onComplete(), 4000); // Complete at 4s (video stays visible)
     
     return () => {
       clearTimeout(timer1);
       clearTimeout(timer2);
       clearTimeout(timer3);
-      clearTimeout(timer4);
     };
   }, [onComplete]);
   
   return (
-    <AnimatePresence>
-      {step < 3 && (
-        <motion.div
-          className={styles.overlay}
-          initial={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          transition={{ duration: 0.3 }}
-        >
-          {/* Simple fade overlay - clean and modern */}
-          {step === 2 && (
-            <motion.div
-              className={styles.fadeOverlay}
-              initial={{ opacity: 1 }}
-              animate={{ opacity: 0 }}
-              transition={{
-                duration: 0.8,
-                ease: "easeInOut",
-              }}
-            />
-          )}
-          
-          {/* Text Content */}
-          <motion.div
-            className={styles.content}
-            initial={{ opacity: 0 }}
-            animate={step === 2 ? { opacity: 0, scale: 0.95 } : { opacity: 1, scale: 1 }}
-            transition={{ duration: 0.6 }}
+    <motion.div
+      className={styles.overlay}
+      initial={{ opacity: 1 }}
+      animate={{ opacity: 1 }}
+    >
+      {/* Video Background */}
+      <div className={styles.videoContainer}>
+        {!videoError ? (
+          <video
+            className={styles.video}
+            autoPlay
+            loop
+            muted
+            playsInline
+            onError={() => setVideoError(true)}
           >
-            <motion.div
-              className={styles.branding}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8, ease: "easeOut" }}
-            >
-              Moodboard by Mark Tietz Fotografie
-            </motion.div>
-            
-            {step >= 1 && (
-              <motion.div
-                className={styles.greeting}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.8, ease: "easeOut", delay: 0.2 }}
-              >
-                {welcomeText}
-              </motion.div>
-            )}
-          </motion.div>
-          
-          {/* Camera Lens Flare Effect */}
-          {step === 2 && (
-            <motion.div
-              className={styles.lensFlare}
-              initial={{ opacity: 0, scale: 0.8 }}
-              animate={{ opacity: [0, 0.6, 0], scale: [0.8, 1.5, 2] }}
-              transition={{ duration: 1.5, ease: "easeOut" }}
-            />
-          )}
+            <source src="/videos/welcome-background.mp4" type="video/mp4" />
+            <source src="/videos/welcome-background.webm" type="video/webm" />
+          </video>
+        ) : (
+          // Animated gradient fallback
+          <div className={styles.gradientFallback} />
+        )}
+        
+        {/* Video overlay for better text readability */}
+        <div className={styles.videoOverlay} />
+      </div>
+      
+      {/* Text Content */}
+      <motion.div
+        className={styles.content}
+        initial={{ opacity: 0 }}
+        animate={step === 2 ? { opacity: 0 } : { opacity: 1 }}
+        transition={{ duration: 0.6 }}
+      >
+        <motion.div
+          className={styles.branding}
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8, ease: "easeOut" }}
+        >
+          Moodboard by Mark Tietz Fotografie
         </motion.div>
-      )}
-    </AnimatePresence>
+        
+        {step >= 1 && (
+          <motion.div
+            className={styles.greeting}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, ease: "easeOut", delay: 0.2 }}
+          >
+            {welcomeText}
+          </motion.div>
+        )}
+      </motion.div>
+    </motion.div>
   );
 }
 
