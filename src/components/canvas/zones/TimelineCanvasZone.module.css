@@ -1,12 +1,16 @@
 .zone {
   grid-area: timeline;
   padding: var(--spacing-lg);
+  background: linear-gradient(135deg, rgba(240, 230, 215, 0.5) 0%, rgba(230, 220, 205, 0.6) 100%);
+  border-radius: var(--radius-lg);
+  border: 1px solid rgba(190, 170, 150, 0.3);
+  box-shadow: 0 2px 15px rgba(139, 115, 85, 0.06);
 }
 
 .header {
-  margin-bottom: var(--spacing-xl);
-  text-align: left;
-  transform: rotate(-1deg);
+  margin-bottom: var(--spacing-lg);
+  text-align: center;
+  transform: rotate(-0.5deg);
 }
 
 .timeline {
