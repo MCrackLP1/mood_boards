@@ -45,7 +45,6 @@ export function MoodHeroZone({ items, onImageClick }: MoodHeroZoneProps) {
           >
             <PolaroidFrame
               rotation={rotations[index % rotations.length]}
-              caption={item.meta?.label}
               onClick={() => onImageClick(item)}
             >
               <img src={item.src} alt={item.meta?.label || 'Mood image'} />

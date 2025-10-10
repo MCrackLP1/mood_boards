@@ -150,7 +150,6 @@ export function CanvasReveal({ items, onReveal }: CanvasRevealProps) {
                   >
                     <PolaroidFrame
                       rotation={0}
-                      caption={item.meta?.label}
                       onClick={() => {}}
                     >
                       <img src={item.src} alt={item.meta?.label || 'Mood'} />

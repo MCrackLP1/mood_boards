@@ -14,7 +14,8 @@
   min-height: 100vh;
   font-family: var(--font-handwriting);
   font-size: 1.5rem;
-  color: var(--canvas-ink);
+  color: #1a1a1a;
+  font-weight: 600;
 }
 
 /* Password Screen */
@@ -71,9 +72,10 @@
   font-size: clamp(2rem, 5vw, 4rem);
   font-weight: 700;
   margin: 0 0 var(--spacing-lg) 0;
-  color: var(--canvas-ink);
+  color: #1a1a1a;
   letter-spacing: -0.02em;
   line-height: var(--line-height-tight);
+  text-shadow: 0 1px 2px rgba(255, 255, 255, 0.3);
 }
 
 .audioControls {
@@ -240,8 +242,9 @@
   padding: var(--spacing-2xl);
   font-family: var(--font-handwriting);
   font-size: var(--font-size-xl);
-  color: var(--canvas-ink);
-  opacity: 0.5;
+  color: #1a1a1a;
+  opacity: 0.7;
+  font-weight: 600;
 }
 
 /* Tablet Layout */

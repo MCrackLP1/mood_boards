@@ -249,9 +249,9 @@ export function CustomerView({ boardId }: CustomerViewProps) {
           animate={isRevealed ? { opacity: 1, y: 0 } : false}
           transition={{ duration: 1, delay: 0.4, ease: [0.4, 0, 0.2, 1] }}
         >
-          {/* Hero Mood Zone - Only shows images from 'general' section (Beispielbilder) */}
+          {/* Hero Mood Zone - Shows all images EXCEPT location images */}
           <MoodHeroZone
-            items={getItemsBySection('general')}
+            items={items.filter(item => item.type === 'image' && (item.section || 'general') !== 'location')}
             onImageClick={handleImageClick}
           />
 
