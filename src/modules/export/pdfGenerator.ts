@@ -11,7 +11,9 @@ import {
   sanitizeFilename, 
   formatDate, 
   formatDateGerman, 
-  getTimeIcon
+  getTimeIcon,
+  calculateImageDimensions,
+  getImageDimensions
 } from './utils';
 
 // A4 dimensions in mm
@@ -219,7 +221,33 @@ function addColorPalette(doc: jsPDF, colors: Color[]): void {
 }
 
 /**
- * Add images in 2x2 grid layout
+ * Convert external URL to base64
+ */
+async function urlToBase64(url: string): Promise<string> {
+  try {
+    // If it's already base64, return it
+    if (url.startsWith('data:')) {
+      return url;
+    }
+
+    // For external URLs, try to load via CORS proxy
+    const response = await fetch(`https://images.weserv.nl/?url=${encodeURIComponent(url)}&default=1`);
+    const blob = await response.blob();
+    
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onloadend = () => resolve(reader.result as string);
+      reader.onerror = reject;
+      reader.readAsDataURL(blob);
+    });
+  } catch (error) {
+    console.error('Failed to convert URL to base64:', error);
+    throw error;
+  }
+}
+
+/**
+ * Add images in 2x2 grid layout with proper aspect ratio
  */
 async function addImages(
   doc: jsPDF,
@@ -239,12 +267,11 @@ async function addImages(
   doc.text(sectionTitle, PAGE_WIDTH / 2, 30, { align: 'center' });
 
   const imagesPerPage = 4; // 2x2 grid
-  const imageSize = 80; // mm
+  const maxImageSize = 80; // mm - max dimensions per cell
   const gap = 10;
   const gridStartX = MARGIN;
   const gridStartY = 50;
 
-  let currentPage = 0;
   let imagesOnCurrentPage = 0;
 
   for (let i = 0; i < imageItems.length; i++) {
@@ -255,24 +282,46 @@ async function addImages(
     const col = imagesOnCurrentPage % 2;
     const row = Math.floor(imagesOnCurrentPage / 2) % 2;
 
-    const x = gridStartX + col * (imageSize + gap);
-    const y = gridStartY + row * (imageSize + gap);
+    const cellX = gridStartX + col * (maxImageSize + gap);
+    const cellY = gridStartY + row * (maxImageSize + gap);
 
     try {
-      // Add image
-      doc.addImage(item.src, 'JPEG', x, y, imageSize, imageSize);
+      // Convert URL images to base64
+      let imageSrc = item.src;
+      if (!item.src.startsWith('data:')) {
+        imageSrc = await urlToBase64(item.src);
+      }
 
-      // Add border
+      // Get original image dimensions
+      const dimensions = await getImageDimensions(imageSrc);
+      
+      // Calculate dimensions maintaining aspect ratio
+      const { width, height } = calculateImageDimensions(
+        dimensions.width,
+        dimensions.height,
+        maxImageSize,
+        maxImageSize
+      );
+
+      // Center image in cell
+      const imageX = cellX + (maxImageSize - width) / 2;
+      const imageY = cellY + (maxImageSize - height) / 2;
+
+      // Add image with correct aspect ratio
+      doc.addImage(imageSrc, 'JPEG', imageX, imageY, width, height);
+
+      // Add border around cell (not image)
       doc.setDrawColor(220, 220, 220);
-      doc.rect(x, y, imageSize, imageSize, 'S');
+      doc.setLineWidth(0.5);
+      doc.rect(cellX, cellY, maxImageSize, maxImageSize, 'S');
 
       // Add label if exists
       if (item.meta?.label) {
         doc.setFontSize(8);
         doc.setFont('helvetica', 'normal');
         doc.setTextColor(100, 100, 100);
-        const labelLines = doc.splitTextToSize(item.meta.label, imageSize - 4);
-        doc.text(labelLines[0], x + (imageSize / 2), y + imageSize + 5, { align: 'center' });
+        const labelLines = doc.splitTextToSize(item.meta.label, maxImageSize - 4);
+        doc.text(labelLines[0], cellX + (maxImageSize / 2), cellY + maxImageSize + 5, { align: 'center' });
       }
 
       imagesOnCurrentPage++;
@@ -281,7 +330,6 @@ async function addImages(
       if (imagesOnCurrentPage >= imagesPerPage && i < imageItems.length - 1) {
         doc.addPage();
         imagesOnCurrentPage = 0;
-        currentPage++;
         
         // Add section title on new page
         doc.setFontSize(20);
@@ -294,8 +342,19 @@ async function addImages(
       const progress = progressStart + ((i + 1) / imageItems.length) * (progressEnd - progressStart);
       updateProgress(Math.floor(progress));
     } catch (error) {
-      console.error('Failed to add image to PDF:', error);
-      // Continue with next image
+      console.error('Failed to add image to PDF:', error, item.src);
+      
+      // Draw error placeholder
+      doc.setFillColor(240, 240, 240);
+      doc.rect(cellX, cellY, maxImageSize, maxImageSize, 'F');
+      doc.setDrawColor(200, 200, 200);
+      doc.rect(cellX, cellY, maxImageSize, maxImageSize, 'S');
+      doc.setFontSize(10);
+      doc.setTextColor(150, 150, 150);
+      doc.text('Bild konnte nicht', cellX + maxImageSize / 2, cellY + maxImageSize / 2 - 3, { align: 'center' });
+      doc.text('geladen werden', cellX + maxImageSize / 2, cellY + maxImageSize / 2 + 3, { align: 'center' });
+      
+      imagesOnCurrentPage++;
     }
   }
 
