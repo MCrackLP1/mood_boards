@@ -6,6 +6,7 @@
 import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { db } from '@/modules/database/db';
+import { supabase } from '@/modules/database/supabase';
 import { Board, BoardItem, Color } from '@/types';
 import { WelcomeAnimation } from '@/components/WelcomeAnimation';
 import { BrandingSignature } from '@/components/BrandingSignature';
@@ -50,32 +51,118 @@ export function CustomerView({ boardId }: CustomerViewProps) {
   }, [boardId]);
   
   const loadBoard = async () => {
-    const loadedBoard = await db.boards.get(boardId);
-    
-    if (!loadedBoard) {
-      alert('Board nicht gefunden');
-      return;
-    }
-    
-    setBoard(loadedBoard);
-    
-    if (loadedBoard.passwordHash) {
-      setIsPasswordProtected(true);
-      setIsUnlocked(false);
-    } else {
-      setIsUnlocked(true);
-      loadItems();
+    try {
+      // Try to load from Supabase first (for shared links)
+      const { data: supabaseBoard, error } = await supabase
+        .from('boards')
+        .select('*')
+        .eq('id', boardId)
+        .single();
+
+      if (error) throw error;
+
+      if (!supabaseBoard) {
+        // Fallback to local IndexedDB if not found on server
+        const localBoard = await db.boards.get(boardId);
+        if (!localBoard) {
+          alert('Board nicht gefunden');
+          return;
+        }
+        setBoard(localBoard);
+        loadItemsLocal();
+        return;
+      }
+
+      // Transform from snake_case to camelCase
+      const loadedBoard: Board = {
+        id: supabaseBoard.id,
+        title: supabaseBoard.title,
+        createdAt: supabaseBoard.created_at,
+        updatedAt: supabaseBoard.updated_at,
+        welcomeText: supabaseBoard.welcome_text || '',
+        brandingEnabled: supabaseBoard.branding_enabled ?? true,
+        passwordHash: supabaseBoard.password_hash || undefined,
+        ambientSoundUrl: supabaseBoard.ambient_sound_url || undefined,
+        customSections: supabaseBoard.custom_sections || [],
+        layoutMode: supabaseBoard.layout_mode || 'grid',
+        shootingDuration: supabaseBoard.shooting_duration || undefined,
+      };
+
+      setBoard(loadedBoard);
+
+      if (loadedBoard.passwordHash) {
+        setIsPasswordProtected(true);
+        setIsUnlocked(false);
+      } else {
+        setIsUnlocked(true);
+        loadItems(loadedBoard);
+      }
+    } catch (error) {
+      console.error('Error loading board from server:', error);
+      
+      // Fallback to local IndexedDB
+      const localBoard = await db.boards.get(boardId);
+      if (!localBoard) {
+        alert('Board nicht gefunden. Bitte stelle sicher, dass du online bist.');
+        return;
+      }
+      setBoard(localBoard);
+      loadItemsLocal();
     }
   };
-  
-  const loadItems = async () => {
+
+  const loadItems = async (boardData: Board) => {
+    try {
+      // Load items from Supabase
+      const { data: supabaseItems, error } = await supabase
+        .from('board_items')
+        .select('*')
+        .eq('board_id', boardId)
+        .order('order', { ascending: true });
+
+      if (error) throw error;
+
+      // Transform to camelCase
+      const loadedItems: BoardItem[] = supabaseItems?.map(item => ({
+        id: item.id,
+        boardId: item.board_id,
+        type: item.type as BoardItem['type'],
+        section: item.section || 'general',
+        order: item.order,
+        createdAt: item.created_at,
+        src: item.src,
+        palette: item.palette,
+        text: item.text,
+        linkUrl: item.link_url,
+        linkPreview: item.link_preview,
+        checklistItems: item.checklist_items,
+        timelineItems: item.timeline_items,
+        meta: item.meta,
+      })) || [];
+
+      setItems(loadedItems);
+
+      const firstImage = loadedItems.find(item => item.type === 'image' && item.src);
+      updateMetaTags({
+        title: `${boardData.title} | Moodboard by Mark Tietz Fotografie`,
+        description: boardData.welcomeText || `Entdecke das Moodboard "${boardData.title}"`,
+        image: firstImage?.src,
+      });
+    } catch (error) {
+      console.error('Error loading items from server:', error);
+      // Fallback to local
+      loadItemsLocal();
+    }
+  };
+
+  const loadItemsLocal = async () => {
     const loadedItems = await db.items
       .where('boardId')
       .equals(boardId)
       .sortBy('order');
-    
+
     setItems(loadedItems);
-    
+
     if (board) {
       const firstImage = loadedItems.find(item => item.type === 'image' && item.src);
       updateMetaTags({
@@ -94,7 +181,9 @@ export function CustomerView({ boardId }: CustomerViewProps) {
     if (isValid) {
       setIsUnlocked(true);
       setPasswordError('');
-      loadItems();
+      if (board) {
+        loadItems(board);
+      }
     } else {
       setPasswordError('Falsches Passwort');
     }
