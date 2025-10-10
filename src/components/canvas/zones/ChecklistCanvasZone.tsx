@@ -14,7 +14,7 @@ interface ChecklistCanvasZoneProps {
 
 export function ChecklistCanvasZone({ items }: ChecklistCanvasZoneProps) {
   const ref = useRef(null);
-  const isInView = useInView(ref, { once: true, amount: 0.2 });
+  const isInView = useInView(ref, { once: true, amount: 0.1 });
   
   // Get all checklist items from all checklist boards
   const allChecklistItems = items
@@ -28,8 +28,8 @@ export function ChecklistCanvasZone({ items }: ChecklistCanvasZoneProps) {
     <motion.div
       ref={ref}
       className={styles.zone}
-      initial={{ opacity: 0, y: 30 }}
-      animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 30 }}
+      initial={{ opacity: 1, y: 0 }}
+      animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.6, ease: "easeOut" }}
     >
       <div className={styles.header}>
