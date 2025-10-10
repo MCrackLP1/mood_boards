@@ -76,8 +76,7 @@ export function CanvasReveal({ items, onReveal }: CanvasRevealProps) {
             playsInline
             onError={() => setVideoError(true)}
           >
-            <source src="/videos/welcome-background.mp4" type="video/mp4" />
-            <source src="/videos/welcome-background.webm" type="video/webm" />
+            <source src="/videos/transition_bg.mp4" type="video/mp4" />
           </video>
         ) : (
           <div className={styles.gradientFallback} />
