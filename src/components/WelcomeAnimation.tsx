@@ -38,37 +38,34 @@ export function WelcomeAnimation({ welcomeText, onComplete }: WelcomeAnimationPr
           exit={{ opacity: 0 }}
           transition={{ duration: 0.3 }}
         >
-          {/* Camera Aperture/Iris with Blades */}
+          {/* Cinematic Wipe Transition (like film curtains) */}
           {step === 2 && (
-            <div className={styles.irisContainer}>
-              {[...Array(6)].map((_, i) => {
-                const rotation = (i * 360) / 6;
-                return (
-                  <motion.div
-                    key={i}
-                    className={styles.irisBlade}
-                    style={{
-                      transform: `rotate(${rotation}deg)`,
-                    }}
-                    initial={{ 
-                      x: '-50%',
-                      y: 0,
-                      scaleX: 1,
-                    }}
-                    animate={{ 
-                      x: '-50%',
-                      y: -2000,
-                      scaleX: 0.5,
-                    }}
-                    transition={{
-                      duration: 1.4,
-                      ease: [0.85, 0, 0.15, 1],
-                      delay: 0.1,
-                    }}
-                  />
-                );
-              })}
-            </div>
+            <>
+              {/* Left curtain */}
+              <motion.div
+                className={styles.curtain}
+                style={{ left: 0 }}
+                initial={{ x: '0%' }}
+                animate={{ x: '-100%' }}
+                transition={{
+                  duration: 1.2,
+                  ease: [0.76, 0, 0.24, 1],
+                  delay: 0.1,
+                }}
+              />
+              {/* Right curtain */}
+              <motion.div
+                className={styles.curtain}
+                style={{ right: 0 }}
+                initial={{ x: '0%' }}
+                animate={{ x: '100%' }}
+                transition={{
+                  duration: 1.2,
+                  ease: [0.76, 0, 0.24, 1],
+                  delay: 0.1,
+                }}
+              />
+            </>
           )}
           
           {/* Text Content */}

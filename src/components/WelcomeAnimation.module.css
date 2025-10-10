@@ -40,62 +40,45 @@
   letter-spacing: -0.02em;
 }
 
-/* Camera Iris Animation - Realistic blade mechanism */
-.irisContainer {
+/* Cinematic Curtain Wipe */
+.curtain {
   position: absolute;
-  top: 50%;
-  left: 50%;
-  width: 100%;
+  top: 0;
+  width: 50%;
   height: 100%;
-  transform: translate(-50%, -50%);
-  z-index: 100;
-  pointer-events: none;
-  overflow: hidden;
-}
-
-.irisBlade {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  width: 150%;
-  height: 150%;
-  transform-origin: 50% 0%;
   background: linear-gradient(
-    180deg,
-    rgba(20, 20, 20, 1) 0%,
-    rgba(30, 30, 30, 0.98) 30%,
-    rgba(26, 26, 26, 0.95) 60%,
-    rgba(20, 20, 20, 0.9) 100%
+    135deg,
+    #0a0a0a 0%,
+    #1a1a1a 50%,
+    #0a0a0a 100%
   );
-  clip-path: polygon(
-    40% 0%,
-    60% 0%,
-    100% 100%,
-    0% 100%
-  );
+  z-index: 100;
   box-shadow: 
-    inset -2px 0 8px rgba(0, 0, 0, 0.5),
-    inset 2px 0 8px rgba(0, 0, 0, 0.5),
-    0 0 20px rgba(0, 0, 0, 0.8);
-  will-change: transform;
+    inset 0 0 100px rgba(0, 0, 0, 0.8),
+    0 0 50px rgba(0, 0, 0, 0.9);
+  pointer-events: none;
 }
 
-.irisBlade::after {
+.curtain::before {
   content: '';
   position: absolute;
   top: 0;
-  left: 0;
-  right: 0;
   bottom: 0;
+  width: 2px;
   background: linear-gradient(
-    90deg,
-    rgba(255, 255, 255, 0) 0%,
-    rgba(255, 255, 255, 0.02) 30%,
-    rgba(255, 255, 255, 0.04) 50%,
-    rgba(255, 255, 255, 0.02) 70%,
-    rgba(255, 255, 255, 0) 100%
+    180deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.1) 50%,
+    transparent 100%
   );
-  pointer-events: none;
+}
+
+.curtain:first-of-type::before {
+  right: 0;
+}
+
+.curtain:last-of-type::before {
+  left: 0;
 }
 
 /* Lens Flare Effect */
