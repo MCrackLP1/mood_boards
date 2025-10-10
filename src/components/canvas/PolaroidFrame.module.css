@@ -1,14 +1,14 @@
 .polaroid {
   background: #fff;
-  padding: 20px 20px 50px 20px;
+  padding: 10px 10px 30px 10px;
   box-shadow: 
-    0 6px 12px rgba(0, 0, 0, 0.12),
-    0 12px 24px rgba(0, 0, 0, 0.1),
-    0 3px 6px rgba(0, 0, 0, 0.08);
+    0 4px 10px rgba(0, 0, 0, 0.1),
+    0 8px 16px rgba(0, 0, 0, 0.08),
+    0 2px 4px rgba(0, 0, 0, 0.06);
   transition: all var(--transition-base);
   cursor: pointer;
   position: relative;
-  min-width: 180px;
+  min-width: 160px;
 }
 
 .polaroid:hover {
@@ -37,15 +37,15 @@
 
 .caption {
   position: absolute;
-  bottom: 8px;
-  left: 15px;
-  right: 15px;
+  bottom: 6px;
+  left: 10px;
+  right: 10px;
   text-align: center;
 }
 
 .captionText {
   font-family: var(--font-handwriting);
-  font-size: 1.125rem;
+  font-size: 1rem;
   color: var(--canvas-ink);
   opacity: 0.8;
   display: inline-block;
