@@ -44,8 +44,8 @@ export function ChecklistCanvasZone({ items }: ChecklistCanvasZoneProps) {
           <motion.div
             key={item.id}
             className={styles.item}
-            initial={{ opacity: 0, x: -20 }}
-            animate={isInView ? { opacity: 1, x: 0 } : { opacity: 0, x: -20 }}
+            initial={{ opacity: 1, x: 0 }}
+            animate={{ opacity: 1, x: 0 }}
             transition={{ 
               duration: 0.4, 
               delay: 0.2 + index * 0.08,
@@ -58,7 +58,7 @@ export function ChecklistCanvasZone({ items }: ChecklistCanvasZoneProps) {
                   className={styles.checkmark}
                   viewBox="0 0 24 24"
                   initial={{ pathLength: 0 }}
-                  animate={isInView ? { pathLength: 1 } : { pathLength: 0 }}
+                  animate={{ pathLength: 1 }}
                   transition={{ 
                     duration: 0.5, 
                     delay: 0.4 + index * 0.08,
