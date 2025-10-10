@@ -1,10 +1,9 @@
 .zone {
-  grid-area: timeline;
-  padding: var(--spacing-lg);
-  background: linear-gradient(135deg, rgba(240, 230, 215, 0.5) 0%, rgba(230, 220, 205, 0.6) 100%);
+  padding: var(--spacing-lg) var(--spacing-xl);
+  background: linear-gradient(135deg, rgba(240, 230, 215, 0.6) 0%, rgba(230, 220, 205, 0.7) 100%);
   border-radius: var(--radius-lg);
-  border: 1px solid rgba(190, 170, 150, 0.3);
-  box-shadow: 0 2px 15px rgba(139, 115, 85, 0.06);
+  border: 1px solid rgba(190, 170, 150, 0.35);
+  box-shadow: 0 2px 12px rgba(139, 115, 85, 0.08);
 }
 
 .header {

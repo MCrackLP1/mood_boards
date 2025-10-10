@@ -1,14 +1,13 @@
 .zone {
-  grid-area: notes;
   display: flex;
   flex-direction: column;
   gap: var(--spacing-md);
   position: relative;
-  padding: var(--spacing-lg);
-  background: linear-gradient(135deg, rgba(255, 248, 235, 0.6) 0%, rgba(255, 245, 225, 0.7) 100%);
+  padding: var(--spacing-lg) var(--spacing-xl);
+  background: linear-gradient(135deg, rgba(255, 248, 235, 0.7) 0%, rgba(255, 245, 225, 0.8) 100%);
   border-radius: var(--radius-lg);
-  border: 1px solid rgba(220, 190, 140, 0.25);
-  box-shadow: 0 2px 15px rgba(139, 115, 85, 0.06);
+  border: 1px solid rgba(220, 190, 140, 0.3);
+  box-shadow: 0 2px 12px rgba(139, 115, 85, 0.08);
 }
 
 .note {
