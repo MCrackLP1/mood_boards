@@ -1,9 +1,10 @@
-# Ignore all video files
+# Ignore all video files except transition_bg.mp4
 *.mp4
 *.webm
 *.mov
 *.avi
 
-# But keep the README
+# But keep the README and transition_bg.mp4
 !README.md
+!transition_bg.mp4
 

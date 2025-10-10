@@ -15,6 +15,7 @@ interface WelcomeAnimationProps {
 export function WelcomeAnimation({ welcomeText, onComplete }: WelcomeAnimationProps) {
   const [step, setStep] = useState(0); // 0: branding, 1: greeting, 2: fade text
   const [videoError, setVideoError] = useState(false);
+  const [videoEnded, setVideoEnded] = useState(false);
   
   useEffect(() => {
     const timer1 = setTimeout(() => setStep(1), 1200);   // Show greeting after 1.2s
@@ -28,6 +29,11 @@ export function WelcomeAnimation({ welcomeText, onComplete }: WelcomeAnimationPr
     };
   }, [onComplete]);
   
+  const handleVideoLoad = (e: React.SyntheticEvent<HTMLVideoElement>) => {
+    // Slow down video to 85% speed
+    e.currentTarget.playbackRate = 0.85;
+  };
+  
   return (
     <motion.div
       className={styles.overlay}
@@ -37,16 +43,20 @@ export function WelcomeAnimation({ welcomeText, onComplete }: WelcomeAnimationPr
       {/* Video Background */}
       <div className={styles.videoContainer}>
         {!videoError ? (
-          <video
+          <motion.video
             className={styles.video}
             autoPlay
-            loop
             muted
             playsInline
             onError={() => setVideoError(true)}
+            onLoadedMetadata={handleVideoLoad}
+            onEnded={() => setVideoEnded(true)}
+            initial={{ opacity: 1 }}
+            animate={{ opacity: videoEnded ? 0 : 1 }}
+            transition={{ duration: 1, ease: "easeInOut" }}
           >
             <source src="/videos/transition_bg.mp4" type="video/mp4" />
-          </video>
+          </motion.video>
         ) : (
           // Animated gradient fallback
           <div className={styles.gradientFallback} />

@@ -18,9 +18,15 @@ export function CanvasReveal({ items, onReveal }: CanvasRevealProps) {
   const [scattered, setScattered] = useState(true);
   const [hasScrolled, setHasScrolled] = useState(false);
   const [videoError, setVideoError] = useState(false);
+  const [videoEnded, setVideoEnded] = useState(false);
   
   // Filter out location images - only show non-location images in the scrambled view
   const imageItems = items.filter(i => i.type === 'image' && (i.section || 'general') !== 'location').slice(0, 15);
+  
+  const handleVideoLoad = (e: React.SyntheticEvent<HTMLVideoElement>) => {
+    // Slow down video to 85% speed
+    e.currentTarget.playbackRate = 0.85;
+  };
   
   // Listen for scroll
   useEffect(() => {
@@ -64,17 +70,18 @@ export function CanvasReveal({ items, onReveal }: CanvasRevealProps) {
       <motion.div
         className={styles.videoBackground}
         initial={{ opacity: 1 }}
-        animate={!scattered ? { opacity: 0 } : { opacity: 1 }}
-        transition={{ duration: 1.5, delay: 0.5 }}
+        animate={!scattered || videoEnded ? { opacity: 0 } : { opacity: 1 }}
+        transition={{ duration: 1.5, delay: videoEnded ? 0 : 0.5 }}
       >
         {!videoError ? (
           <video
             className={styles.video}
             autoPlay
-            loop
             muted
             playsInline
             onError={() => setVideoError(true)}
+            onLoadedMetadata={handleVideoLoad}
+            onEnded={() => setVideoEnded(true)}
           >
             <source src="/videos/transition_bg.mp4" type="video/mp4" />
           </video>
