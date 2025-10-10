@@ -23,6 +23,7 @@ import { NotesZone } from '@/components/canvas/zones/NotesZone';
 import { LocationZone } from '@/components/canvas/zones/LocationZone';
 import { TimelineCanvasZone } from '@/components/canvas/zones/TimelineCanvasZone';
 import { WeatherBadgeZone } from '@/components/canvas/zones/WeatherBadgeZone';
+import { ChecklistCanvasZone } from '@/components/canvas/zones/ChecklistCanvasZone';
 import { fadeInOut } from '@/animations/canvas';
 import styles from './CustomerView.module.css';
 
@@ -285,6 +286,9 @@ export function CustomerView({ boardId }: CustomerViewProps) {
 
           {/* Notes Zone */}
           <NotesZone items={getItemsBySection('notes')} />
+
+          {/* Checklist Zone */}
+          <ChecklistCanvasZone items={items} />
         </motion.div>
         
         {items.length === 0 && (
