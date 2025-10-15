@@ -10,6 +10,7 @@ import { Button } from '@/modules/ui/Button';
 import { Modal } from '@/modules/ui/Modal';
 import { Input } from '@/modules/ui/Input';
 import { SmoothScroller } from '@/components/SmoothScroller';
+import { ExampleBoardsCreator } from '@/components/ExampleBoardsCreator';
 import styles from './Home.module.css';
 
 interface HomeProps {
@@ -19,6 +20,7 @@ interface HomeProps {
 export function Home({ onOpenBoard }: HomeProps) {
   const { boards, loadBoards, createBoard, duplicateBoard, deleteBoard } = useBoardStore();
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [isExamplesModalOpen, setIsExamplesModalOpen] = useState(false);
   const [newBoardTitle, setNewBoardTitle] = useState('');
   const [boardPreviews, setBoardPreviews] = useState<Record<string, string>>({});
   
@@ -67,17 +69,27 @@ export function Home({ onOpenBoard }: HomeProps) {
     <div className={styles.page}>
       <header className={styles.header}>
         <h1 className={styles.title}>Moodboards</h1>
-        <Button onClick={() => setIsCreateModalOpen(true)}>
-          Neues Board
-        </Button>
+        <div style={{ display: 'flex', gap: '0.75rem' }}>
+          <Button variant="secondary" onClick={() => setIsExamplesModalOpen(true)}>
+            🎨 Beispiele erstellen
+          </Button>
+          <Button onClick={() => setIsCreateModalOpen(true)}>
+            Neues Board
+          </Button>
+        </div>
       </header>
       
       {boards.length === 0 ? (
         <div className={styles.empty}>
           <p>Noch keine Moodboards vorhanden.</p>
-          <Button onClick={() => setIsCreateModalOpen(true)}>
-            Erstes Board erstellen
-          </Button>
+          <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center', marginTop: '1rem' }}>
+            <Button onClick={() => setIsCreateModalOpen(true)}>
+              Erstes Board erstellen
+            </Button>
+            <Button variant="secondary" onClick={() => setIsExamplesModalOpen(true)}>
+              🎨 Oder Beispiele laden
+            </Button>
+          </div>
         </div>
       ) : (
         <SmoothScroller>
@@ -118,6 +130,14 @@ export function Home({ onOpenBoard }: HomeProps) {
             </Button>
           </div>
         </form>
+      </Modal>
+      
+      <Modal
+        isOpen={isExamplesModalOpen}
+        onClose={() => setIsExamplesModalOpen(false)}
+        title="Beispiel-Moodboards erstellen"
+      >
+        <ExampleBoardsCreator />
       </Modal>
     </div>
   );

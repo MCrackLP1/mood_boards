@@ -19,10 +19,20 @@ Eine minimalistische, private Moodboard-Webapp für Fotografen mit **Geräte-Syn
 
 ## ✨ Features
 
+### 🎨 NEU: Beispiel-Moodboards
+- **10 professionelle Moodboard-Vorlagen** mit einem Klick erstellen
+- Verschiedene Themen: Hochzeit, Corporate, Fashion, Tech, uvm.
+- Hochwertige Stock-Bilder von Unsplash
+- Vordefinierte Farbpaletten für jedes Board
+- Checklisten und Notizen als Ausgangspunkt
+- **Ohne Location/Zeit** - Kann später hinzugefügt werden
+- 📖 **[Anleitung zu Beispiel-Boards](./BEISPIEL_BOARDS_ANLEITUNG.md)**
+
 ### Übersicht (Home)
 - Grid-Ansicht aller Moodboards mit Vorschaubildern
 - Erstellen, Duplizieren und Löschen von Boards
 - Geräte-übergreifende Synchronisation über eigenen Server
+- **Button zum Erstellen von Beispiel-Boards**
 
 ### Board-Editor
 - **Strukturierte Bereiche**: 3 feste Sections (✨ Beispielbilder, 📍 Location, 📋 Allgemein)
