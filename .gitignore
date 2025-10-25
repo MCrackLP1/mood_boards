@@ -1,48 +1,37 @@
-# Dependencies
-node_modules
-server/node_modules
+# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
 
-# Build output
-dist
-build
+# dependencies
+/node_modules
+/.pnp
+.pnp.js
+.yarn/install-state.gz
 
-# Environment variables (WICHTIG: Nicht committen!)
-.env
-.env.local
-.env.production
-.env.development
-.env.*.local
+# testing
+/coverage
 
-# Server data (Datenbank nicht committen!)
-server/data
-*.db
-*.db-journal
+# next.js
+/.next/
+/out/
 
-# Backups
-backups
+# production
+/build
 
-# IDE
-.vscode
-.idea
-*.swp
-*.swo
-
-# OS
+# misc
 .DS_Store
-Thumbs.db
+*.pem
 
-# Logs
-*.log
+# debug
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 
-# Testing
-coverage
+# local env files
+.env*.local
+.env
 
-# Vercel
+# vercel
 .vercel
 
-# Optional: Große Dateien
-public/assets/*.mp4
-public/assets/*.mov
+# typescript
+*.tsbuildinfo
+next-env.d.ts

@@ -1,272 +1,166 @@
-# Moodboard Webapp
+# Mood Boards - Cinematische Zeitleisten
 
-Eine minimalistische, private Moodboard-Webapp für Fotografen mit **Geräte-Synchronisation**.
-
-## 🆕 Neu: Geräte-übergreifende Synchronisation + Internet-Zugriff
-
-**Alle deine Moodboards auf allen Geräten - überall im Internet!** 
-- ✅ **Windows Home Server Backend** - Deine eigene Cloud-Lösung
-- ✅ **Internet-Zugriff** - Via DuckDNS von überall erreichbar
-- ✅ **Vercel Frontend** - Kostenlos, schnell, HTTPS inklusive
-- ✅ **Automatische Sync** - Desktop, Handy, Tablet immer synchron
-- ✅ **100% privat** - Backend läuft auf deinem Server
-- ✅ **Kostenlos** - Keine Cloud-Gebühren
-
-**API URL**: `http://www.mark-tietz.duckdns.org:3001/api`
-
-👉 **[Lokales Setup](./SYNC_SETUP_GUIDE.md)** - Nur im lokalen Netzwerk  
-👉 **[Internet Setup](./INTERNET_UND_VERCEL_SETUP.md)** - Von überall erreichbar + Vercel
+Eine moderne Web-App zum Erstellen von Mood Boards mit vertikalen Zeitleisten. Erstelle Boards, füge Bilder und Notizen hinzu und teile deine kreativen Ideen.
 
 ## ✨ Features
 
-### 🎨 NEU: Beispiel-Moodboards
-- **10 professionelle Moodboard-Vorlagen** mit einem Klick erstellen
-- Verschiedene Themen: Hochzeit, Corporate, Fashion, Tech, uvm.
-- Hochwertige Stock-Bilder von Unsplash
-- Vordefinierte Farbpaletten für jedes Board
-- Checklisten und Notizen als Ausgangspunkt
-- **Ohne Location/Zeit** - Kann später hinzugefügt werden
-- 📖 **[Anleitung zu Beispiel-Boards](./BEISPIEL_BOARDS_ANLEITUNG.md)**
+- 🎨 **Cinematisches Design** - Dunkles Theme mit Gradient-Akzenten
+- 📅 **Vertikale Zeitleiste** - Organisiere deine Ideen chronologisch
+- 🖼️ **Drag & Drop Bilder** - Einfaches Hochladen von Bildern
+- 📝 **Notizen** - Füge Textnotizen zur Zeitleiste hinzu
+- 🔗 **Teilen** - Teile deine Boards mit anderen
+- 📱 **Responsive** - Funktioniert auf Desktop und Mobile
 
-### Übersicht (Home)
-- Grid-Ansicht aller Moodboards mit Vorschaubildern
-- Erstellen, Duplizieren und Löschen von Boards
-- Geräte-übergreifende Synchronisation über eigenen Server
-- **Button zum Erstellen von Beispiel-Boards**
+## 🚀 Technologie-Stack
 
-### Board-Editor
-- **Strukturierte Bereiche**: 3 feste Sections (✨ Beispielbilder, 📍 Location, 📋 Allgemein)
-- **Text & Bilder kombiniert**: Notizen und Bilder pro Section
-- **Mediathek mit Ordnern**: Organisiere Bilder in Kategorien - 5 Standard-Ordner + eigene
-- **Web-Bildsuche**: Suche & Import von Bildern direkt aus Unsplash, Pexels & Pixabay
-- **Multi-Select**: Mehrere Bilder auf einmal auswählen und hinzufügen
-- **Automatische Farbextraktion**: 5-8 dominante Farben pro Bild
-- **Inline-Notizen**: Bearbeitbare Text-Notizen pro Section
-- **Auto-Save**: Änderungen werden automatisch gespeichert
-- **Einstellungen**: Board-Titel und Willkommenstext anpassen
+- **Frontend**: Next.js 14 (App Router), React, TypeScript
+- **Backend**: Next.js API Routes
+- **Datenbank**: Vercel Postgres
+- **Bild-Speicherung**: Vercel Blob Storage
+- **Styling**: Tailwind CSS + Framer Motion
+- **Drag & Drop**: @dnd-kit/core
+- **Deployment**: Vercel
 
-### Kundenansicht (Read-Only)
-- Öffentlicher, nicht gelisteter Link (`#/view/{id}`)
-- **Willkommensanimation**: Dezente Animation mit Branding und personalisiertem Text
-- **Ambient Sound** (optional): Audio-Player mit Lautstärkeregler
-- **Passwortschutz** (optional): Einfacher clientseitiger Schutz
-- **Branding-Signatur**: "by Mark Tietz Fotografie" (toggelbar)
-- **Smooth Scrolling**: Sanfte Scroll-Animationen und Fade-Ins
+## 📦 Installation & Setup
 
-### Audio-Provider-System
-Provider-basierte Architektur für Ambient Sounds:
-- **Pixabay Sounds** (CC0)
-- **Freesound.org** (CC-Lizenzen)
-- **Fallback**: Lokale Audio-Dateien oder kein Sound
+### 1. Repository klonen
 
-## 🚀 Setup
+```bash
+git clone https://github.com/MCrackLP1/mood_boards.git
+cd mood_boards
+```
 
-### Option 1: Mit Server-Synchronisation (Empfohlen)
-
-Für geräteübergreifende Synchronisation auf deinem Windows Home Server:
-
-1. **Server einrichten** (siehe [SYNC_SETUP_GUIDE.md](./SYNC_SETUP_GUIDE.md))
-   ```powershell
-   cd server
-   npm install
-   npm start
-   ```
-
-2. **Frontend installieren**
-   ```bash
-   npm install
-   ```
-
-3. **Server-URL konfigurieren** (`.env`)
-   ```
-   VITE_API_URL=http://192.168.1.100:3001
-   ```
-
-4. **App bauen**
-   ```bash
-   npm run build
-   ```
-
-**Detaillierte Anleitung**: [SYNC_SETUP_GUIDE.md](./SYNC_SETUP_GUIDE.md)
-
-### Option 2: Standalone (nur lokaler Browser)
-
-Für lokale Nutzung ohne Synchronisation:
+### 2. Dependencies installieren
 
 ```bash
 npm install
+```
+
+### 3. Umgebungsvariablen
+
+Die Umgebungsvariablen werden automatisch von Vercel bereitgestellt. Für lokale Entwicklung:
+
+```bash
+# Installiere Vercel CLI
+npm i -g vercel
+
+# Starte Entwicklungsserver mit Vercel
+vercel dev
+```
+
+### 4. Datenbank initialisieren
+
+Die Datenbank-Tabellen werden automatisch erstellt, wenn du die App das erste Mal startest.
+
+## 🏗️ Projekt-Struktur
+
+```
+mood_boards/
+├── app/
+│   ├── page.tsx                 # Dashboard mit Board-Übersicht
+│   ├── board/[id]/page.tsx      # Einzelnes Board mit Zeitleiste
+│   ├── api/
+│   │   ├── boards/route.ts      # Board CRUD API
+│   │   ├── items/route.ts       # Timeline Items API
+│   │   └── upload/route.ts      # Bild-Upload API
+│   └── layout.tsx               # Root Layout
+├── components/
+│   ├── BoardCard.tsx            # Board-Karte für Übersicht
+│   ├── Timeline.tsx             # Zeitleiste Komponente
+│   ├── TimelineItem.tsx         # Einzelnes Timeline-Item
+│   ├── CreateBoardModal.tsx     # Modal zum Erstellen neuer Boards
+│   └── ...
+├── lib/
+│   ├── db.ts                    # Datenbank-Funktionen
+│   └── types.ts                 # TypeScript Typen
+└── ...
+```
+
+## 🚀 Deployment
+
+### Vercel (Empfohlen)
+
+1. **Repository mit Vercel verbinden**
+   - Gehe zu [vercel.com](https://vercel.com)
+   - Importiere dein GitHub Repository
+   - Vercel erkennt automatisch Next.js und konfiguriert alles
+
+2. **Datenbank & Storage einrichten**
+   - Vercel Postgres: Wird automatisch aktiviert
+   - Vercel Blob: Wird automatisch aktiviert
+   - Keine manuelle Konfiguration nötig!
+
+3. **Deploy**
+   - Push zu GitHub triggert automatisch einen neuen Deploy
+   - Deine App ist live!
+
+### Lokale Entwicklung
+
+```bash
+# Mit Vercel CLI (empfohlen für volle Funktionalität)
+vercel dev
+
+# Oder normaler Next.js dev server
 npm run dev
 ```
 
-> **Hinweis**: Im Standalone-Modus werden Daten nur lokal im Browser gespeichert (IndexedDB)
-
-### Umgebungsvariablen
-
-Kopiere `.env.example` zu `.env` und füge optional API-Keys hinzu:
-
-```bash
-# Image Search Provider API Keys (optional)
-VITE_IMAGE_UNSPLASH_KEY=your_key_here
-VITE_IMAGE_PEXELS_KEY=your_key_here
-VITE_IMAGE_PIXABAY_KEY=your_key_here
-
-# Audio Provider API Keys (optional)
-VITE_AUDIO_PIXABAY_KEY=your_key_here
-VITE_AUDIO_FREESOUND_KEY=your_key_here
-
-# Public Base URL (für Share-Links)
-VITE_PUBLIC_BASE_URL=http://localhost:3000
-```
-
-#### API-Keys erhalten (kostenlos):
-- **Unsplash**: https://unsplash.com/developers (50 requests/Stunde gratis)
-- **Pexels**: https://www.pexels.com/api/ (200 requests/Stunde gratis)
-- **Pixabay**: https://pixabay.com/api/docs/ (Keine Limits, CC0-Lizenz)
-
-> **Hinweis**: Ohne API-Keys funktioniert die App vollständig, nur Web-Bildsuche und Audio-Features sind deaktiviert.
-
-## 🛠️ Development
-
-```bash
-# Dev-Server starten (http://localhost:3000)
-npm run dev
-
-# Build für Produktion
-npm run build
-
-# Preview des Production-Builds
-npm run preview
-
-# Tests ausführen
-npm test
-```
-
-## 📁 Projektstruktur
-
-```
-src/
-├── modules/           # Kern-Module (isoliert, wiederverwendbar)
-│   ├── boards/       # Board CRUD & State Management
-│   ├── assets/       # Bild-Upload & Farbextraktion
-│   ├── audio/        # Audio-Provider-System
-│   ├── database/     # IndexedDB Setup (Dexie)
-│   ├── ui/           # Primitive UI-Komponenten
-│   └── utils/        # Utilities (ID, Hash, etc.)
-├── components/       # Feature-spezifische Komponenten
-├── pages/            # Seiten (Home, BoardEditor, CustomerView)
-├── types/            # TypeScript-Typen
-├── App.tsx           # Main App & Routing
-└── main.tsx          # Entry Point
-```
-
-## 🎨 Technologie-Stack
-
-- **Framework**: Vite + React + TypeScript
-- **State Management**: Zustand (minimal, performant)
-- **Storage**: Dexie.js (IndexedDB-Wrapper)
-- **Styling**: CSS Modules (keine externe Dependency)
-- **Testing**: Vitest
-- **Build**: Vite (schnell, ESNext)
-
-## 🔗 Routing
-
-Die App nutzt Hash-basiertes Routing (keine externe Router-Library):
-
-- `/` oder `#/` → Home (Übersicht)
-- `#/board/{id}` → Board-Editor
-- `#/view/{id}` → Kundenansicht (Read-Only)
-
-## 🔒 Sicherheit
-
-**Hinweis**: Der Passwortschutz ist eine clientseitige Lösung (SHA-256 Hash) und bietet nur grundlegenden Schutz. Für sensible Daten sollte eine serverseitige Authentifizierung implementiert werden.
-
-## 🌐 Deployment
-
-Die App ist statisch und kann auf jedem Hosting deployed werden:
-
-### Vercel
-```bash
-npm run build
-# Deploye den dist/-Ordner
-```
-
-### Netlify
-```bash
-npm run build
-# Deploye den dist/-Ordner
-```
-
-### GitHub Pages
-```bash
-npm run build
-# Deploye den dist/-Ordner zu gh-pages branch
-```
-
-## 🎯 Verwendung
+## 📖 Verwendung
 
 ### Board erstellen
-1. Auf "Neues Board" klicken
-2. Titel eingeben
-3. Board öffnet sich automatisch im Editor
+1. Klicke auf "Neues Board erstellen"
+2. Gib einen Titel ein
+3. Klicke auf "Erstellen"
 
-### Bilder hochladen
-1. Bilder per Drag & Drop in die Upload-Zone ziehen
-2. Oder "Bilder auswählen" Button verwenden
-3. Farbpalette wird automatisch extrahiert
+### Bilder hinzufügen
+- **Drag & Drop**: Ziehe Bilder direkt in die Zeitleiste
+- **Button**: Klicke auf "Bilder hochladen"
 
-### Farb-Filter nutzen
-1. Auf eine Farb-Swatch klicken
-2. Bilder mit ähnlicher Farbe werden hervorgehoben
-3. Nochmal klicken zum Zurücksetzen
+### Notizen hinzufügen
+- Klicke auf eine leere Stelle in der Zeitleiste
+- Bearbeite den Text direkt
 
-### Board teilen
-1. Im Editor auf "Teilen" klicken
-2. Link wird in Zwischenablage kopiert
-3. Link an Kunden senden
+### Teilen
+- Klicke auf "Teilen" im Header
+- Der Link wird in die Zwischenablage kopiert
 
-### Board-Einstellungen
-1. Im Editor auf "Einstellungen" klicken
-2. Titel und Willkommenstext anpassen
-3. Optional: Passwort setzen (TODO: Feature implementieren)
+## 🎨 Design-Prinzipien
 
-## 📝 TODOs & Erweiterungen
+- **Cinematisch**: Dunkles Theme mit subtilen Animationen
+- **Minimalistisch**: Fokussiert auf Content, nicht auf UI
+- **Intuitiv**: Drag & Drop für maximale Benutzerfreundlichkeit
+- **Responsive**: Funktioniert auf allen Geräten
 
-Siehe `TASKS.md` für:
-- Geplante Features
-- Bekannte Einschränkungen
-- Verbesserungsmöglichkeiten
-- Erweiterungspunkte
+## 🔧 API-Referenz
 
-## 🧪 Tests
+### Boards
+- `GET /api/boards` - Alle Boards abrufen
+- `POST /api/boards` - Neues Board erstellen
+- `GET /api/boards/[id]` - Board mit Items laden
+- `PATCH /api/boards/[id]` - Board aktualisieren
+- `DELETE /api/boards/[id]` - Board löschen
 
-```bash
-# Alle Tests ausführen
-npm test
+### Timeline Items
+- `POST /api/items` - Neues Item erstellen
+- `PATCH /api/items/[id]` - Item aktualisieren
+- `DELETE /api/items/[id]` - Item löschen
 
-# Tests im Watch-Mode
-npm test -- --watch
-
-# Tests mit UI
-npm run test:ui
-```
-
-Aktuell getestet:
-- ✅ Color Extraction (Ähnlichkeitsberechnung)
-- ✅ Password Hashing (SHA-256)
+### Upload
+- `POST /api/upload` - Bild hochladen
 
 ## 🤝 Beitragen
 
-Das Projekt ist optimiert für AI-Editierbarkeit:
-- Kleine, sprechende Module
-- JSDoc/TSDoc an Public-Funktionen
-- Klare Kommentare (Warum, nicht nur Was)
-- Sinnvolle Dateinamen, keine God-Files
+1. Fork das Repository
+2. Erstelle einen Feature-Branch
+3. Committe deine Änderungen
+4. Push zu deinem Branch
+5. Erstelle einen Pull Request
 
 ## 📄 Lizenz
 
-Privates Projekt für Mark Tietz Fotografie.
+Dieses Projekt ist unter der MIT-Lizenz lizenziert.
 
----
+## 📞 Support
 
-**Entwickelt mit ❤️ für minimalistische und schöne UX.**
-
+Bei Fragen oder Problemen:
+- Erstelle ein Issue auf GitHub
+- Schaue in die Vercel-Dokumentation für Deploy-Fragen
