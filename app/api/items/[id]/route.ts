@@ -24,35 +24,18 @@ export async function PATCH(
 
     const body: UpdateItemInput = await request.json();
     
-    // Build dynamic update query
-    const updates: string[] = [];
-    const values: (string | number)[] = [];
-    let valueIndex = 1;
+    console.log('PATCH request body:', body);
 
-    if (body.content !== undefined) {
-      updates.push(`content = $${valueIndex++}`);
-      values.push(body.content);
-    }
-    if (body.position_y !== undefined) {
-      updates.push(`position_y = $${valueIndex++}`);
-      values.push(body.position_y);
-    }
-    if (body.position_x !== undefined) {
-      updates.push(`position_x = $${valueIndex++}`);
-      values.push(body.position_x);
-    }
-    if (body.width !== undefined) {
-      updates.push(`width = $${valueIndex++}`);
-      values.push(body.width);
-    }
-    if (body.height !== undefined) {
-      updates.push(`height = $${valueIndex++}`);
-      values.push(body.height);
-    }
-    if (body.time !== undefined) {
-      updates.push(`time = $${valueIndex++}`);
-      values.push(body.time);
-    }
+    // Update with conditional fields
+    // We'll use a more straightforward approach with Vercel Postgres
+    const updates: string[] = [];
+    
+    if (body.content !== undefined) updates.push('content');
+    if (body.position_y !== undefined) updates.push('position_y');
+    if (body.position_x !== undefined) updates.push('position_x');
+    if (body.width !== undefined) updates.push('width');
+    if (body.height !== undefined) updates.push('height');
+    if (body.time !== undefined) updates.push('time');
 
     if (updates.length === 0) {
       return NextResponse.json(
@@ -61,28 +44,49 @@ export async function PATCH(
       );
     }
 
-    values.push(itemId);
-    const query = `
-      UPDATE timeline_items 
-      SET ${updates.join(', ')}
-      WHERE id = $${valueIndex}
-      RETURNING *
+    // Fetch current item
+    const currentResult = await sql<TimelineItem>`
+      SELECT * FROM timeline_items WHERE id = ${itemId}
     `;
 
-    const result = await sql.query<TimelineItem>(query, values);
-
-    if (result.rows.length === 0) {
+    if (currentResult.rows.length === 0) {
       return NextResponse.json(
         { error: 'Item not found' },
         { status: 404 }
       );
     }
 
+    const currentItem = currentResult.rows[0];
+
+    // Merge updates with current values
+    const updatedContent = body.content ?? currentItem.content;
+    const updatedPositionY = body.position_y ?? currentItem.position_y;
+    const updatedPositionX = body.position_x ?? currentItem.position_x;
+    const updatedWidth = body.width ?? currentItem.width;
+    const updatedHeight = body.height ?? currentItem.height;
+    const updatedTime = body.time !== undefined ? body.time : currentItem.time;
+
+    // Update with merged values
+    const result = await sql<TimelineItem>`
+      UPDATE timeline_items 
+      SET 
+        content = ${updatedContent},
+        position_y = ${updatedPositionY},
+        position_x = ${updatedPositionX},
+        width = ${updatedWidth},
+        height = ${updatedHeight},
+        time = ${updatedTime}
+      WHERE id = ${itemId}
+      RETURNING *
+    `;
+
+    console.log('Update result:', result.rows[0]);
+
     return NextResponse.json({ item: result.rows[0] });
   } catch (error) {
     console.error('Error updating item:', error);
     return NextResponse.json(
-      { error: 'Failed to update item' },
+      { error: 'Failed to update item', details: error instanceof Error ? error.message : 'Unknown error' },
       { status: 500 }
     );
   }
@@ -115,4 +119,3 @@ export async function DELETE(
     );
   }
 }
-
