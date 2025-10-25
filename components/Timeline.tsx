@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   DndContext,
@@ -29,6 +29,11 @@ interface TimelineProps {
 export default function Timeline({ boardId, items: initialItems, onItemsChange }: TimelineProps) {
   const [items, setItems] = useState(initialItems);
   const [isUploading, setIsUploading] = useState(false);
+
+  // Sync local state with props when items change
+  useEffect(() => {
+    setItems(initialItems);
+  }, [initialItems]);
 
   const sensors = useSensors(
     useSensor(PointerSensor),
@@ -76,9 +81,14 @@ export default function Timeline({ boardId, items: initialItems, onItemsChange }
 
       if (response.ok) {
         onItemsChange();
+      } else {
+        const errorData = await response.json();
+        console.error('Error adding note:', errorData);
+        alert('Fehler beim Hinzufügen der Notiz: ' + (errorData.error || 'Unbekannter Fehler'));
       }
     } catch (error) {
       console.error('Error adding note:', error);
+      alert('Netzwerkfehler beim Hinzufügen der Notiz');
     }
   };
 
@@ -97,7 +107,12 @@ export default function Timeline({ boardId, items: initialItems, onItemsChange }
         body: formData,
       });
 
-      if (!uploadResponse.ok) throw new Error('Upload failed');
+      if (!uploadResponse.ok) {
+        const errorData = await uploadResponse.json();
+        console.error('Upload error:', errorData);
+        alert('Fehler beim Hochladen: ' + (errorData.error || 'Unbekannter Fehler'));
+        return;
+      }
 
       const { url } = await uploadResponse.json();
 
@@ -116,11 +131,18 @@ export default function Timeline({ boardId, items: initialItems, onItemsChange }
 
       if (itemResponse.ok) {
         onItemsChange();
+      } else {
+        const errorData = await itemResponse.json();
+        console.error('Error creating item:', errorData);
+        alert('Fehler beim Erstellen des Items: ' + (errorData.error || 'Unbekannter Fehler'));
       }
     } catch (error) {
       console.error('Error uploading image:', error);
+      alert('Netzwerkfehler beim Hochladen des Bildes');
     } finally {
       setIsUploading(false);
+      // Reset the file input
+      e.target.value = '';
     }
   };
 
