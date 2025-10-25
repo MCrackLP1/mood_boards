@@ -1,12 +1,19 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getBoard, getTimelineItems, updateBoard, deleteBoard } from '@/lib/db';
+import { sql } from '@/lib/db';
+import type { Board, TimelineItem } from '@/lib/types';
 
+type RouteContext = {
+  params: Promise<{ id: string }>;
+};
+
+// GET /api/boards/[id] - Get board with items
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  context: RouteContext
 ) {
   try {
-    const boardId = parseInt(params.id);
+    const { id } = await context.params;
+    const boardId = parseInt(id);
 
     if (isNaN(boardId)) {
       return NextResponse.json(
@@ -15,21 +22,28 @@ export async function GET(
       );
     }
 
-    const [board, items] = await Promise.all([
-      getBoard(boardId),
-      getTimelineItems(boardId)
-    ]);
+    // Get board
+    const boardResult = await sql<Board>`
+      SELECT * FROM boards WHERE id = ${boardId}
+    `;
 
-    if (!board) {
+    if (boardResult.rows.length === 0) {
       return NextResponse.json(
         { error: 'Board not found' },
         { status: 404 }
       );
     }
 
+    // Get timeline items
+    const itemsResult = await sql<TimelineItem>`
+      SELECT * FROM timeline_items 
+      WHERE board_id = ${boardId}
+      ORDER BY position_y ASC
+    `;
+
     return NextResponse.json({
-      ...board,
-      items
+      board: boardResult.rows[0],
+      items: itemsResult.rows,
     });
   } catch (error) {
     console.error('Error fetching board:', error);
@@ -40,45 +54,14 @@ export async function GET(
   }
 }
 
-export async function PATCH(
-  request: NextRequest,
-  { params }: { params: { id: string } }
-) {
-  try {
-    const boardId = parseInt(params.id);
-    const body = await request.json();
-
-    if (isNaN(boardId)) {
-      return NextResponse.json(
-        { error: 'Invalid board ID' },
-        { status: 400 }
-      );
-    }
-
-    if (!body.title || body.title.trim().length === 0) {
-      return NextResponse.json(
-        { error: 'Title is required' },
-        { status: 400 }
-      );
-    }
-
-    const board = await updateBoard(boardId, body.title.trim());
-    return NextResponse.json(board);
-  } catch (error) {
-    console.error('Error updating board:', error);
-    return NextResponse.json(
-      { error: 'Failed to update board' },
-      { status: 500 }
-    );
-  }
-}
-
+// DELETE /api/boards/[id] - Delete board
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  context: RouteContext
 ) {
   try {
-    const boardId = parseInt(params.id);
+    const { id } = await context.params;
+    const boardId = parseInt(id);
 
     if (isNaN(boardId)) {
       return NextResponse.json(
@@ -87,7 +70,8 @@ export async function DELETE(
       );
     }
 
-    await deleteBoard(boardId);
+    await sql`DELETE FROM boards WHERE id = ${boardId}`;
+
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error('Error deleting board:', error);
@@ -97,3 +81,4 @@ export async function DELETE(
     );
   }
 }
+

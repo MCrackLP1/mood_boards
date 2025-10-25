@@ -1,6 +1,7 @@
-import { put } from '@vercel/blob';
 import { NextRequest, NextResponse } from 'next/server';
+import { put } from '@vercel/blob';
 
+// POST /api/upload - Upload image to Vercel Blob
 export async function POST(request: NextRequest) {
   try {
     const formData = await request.formData();
@@ -16,30 +17,30 @@ export async function POST(request: NextRequest) {
     // Validate file type
     if (!file.type.startsWith('image/')) {
       return NextResponse.json(
-        { error: 'Only image files are allowed' },
+        { error: 'File must be an image' },
         { status: 400 }
       );
     }
 
-    // Validate file size (max 5MB)
-    if (file.size > 5 * 1024 * 1024) {
+    // Validate file size (max 10MB)
+    const maxSize = 10 * 1024 * 1024; // 10MB
+    if (file.size > maxSize) {
       return NextResponse.json(
-        { error: 'File size must be less than 5MB' },
+        { error: 'File size must be less than 10MB' },
         { status: 400 }
       );
     }
-
-    // Generate unique filename
-    const fileName = `moodboard-${Date.now()}-${file.name}`;
 
     // Upload to Vercel Blob
-    const blob = await put(fileName, file, {
+    const blob = await put(file.name, file, {
       access: 'public',
+      addRandomSuffix: true,
     });
 
     return NextResponse.json({
       url: blob.url,
-      success: true
+      pathname: blob.pathname,
+      contentType: blob.contentType,
     });
   } catch (error) {
     console.error('Error uploading file:', error);
@@ -49,3 +50,4 @@ export async function POST(request: NextRequest) {
     );
   }
 }
+

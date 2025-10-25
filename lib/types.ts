@@ -15,19 +15,21 @@ export interface TimelineItem {
   created_at: Date;
 }
 
-export interface CreateBoardRequest {
+export type CreateBoardInput = {
   title: string;
-}
+};
 
-export interface UpdateItemRequest {
+export type CreateItemInput = {
+  board_id: number;
+  type: 'note' | 'image';
+  content: string;
+  position_y: number;
+  position_x: number;
+};
+
+export type UpdateItemInput = {
   content?: string;
   position_y?: number;
   position_x?: number;
-}
+};
 
-export interface CreateItemRequest {
-  type: 'note' | 'image';
-  content: string;
-  position_y?: number;
-  position_x?: number;
-}

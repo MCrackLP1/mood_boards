@@ -1,166 +1,214 @@
-# Mood Boards - Cinematische Zeitleisten
+# 🎨 Mood Boards
 
-Eine moderne Web-App zum Erstellen von Mood Boards mit vertikalen Zeitleisten. Erstelle Boards, füge Bilder und Notizen hinzu und teile deine kreativen Ideen.
+Eine moderne, cinematische Web-App zum Erstellen visueller Zeitleisten und Mood Boards.
 
 ## ✨ Features
 
-- 🎨 **Cinematisches Design** - Dunkles Theme mit Gradient-Akzenten
-- 📅 **Vertikale Zeitleiste** - Organisiere deine Ideen chronologisch
-- 🖼️ **Drag & Drop Bilder** - Einfaches Hochladen von Bildern
-- 📝 **Notizen** - Füge Textnotizen zur Zeitleiste hinzu
-- 🔗 **Teilen** - Teile deine Boards mit anderen
-- 📱 **Responsive** - Funktioniert auf Desktop und Mobile
+- 🎬 **Cinematisches Design** mit animierten Gradienten und glassmorphen Effekten
+- 📝 **Notizen** hinzufügen, bearbeiten und verschieben
+- 🖼️ **Bilder** hochladen und auf der Zeitleiste platzieren
+- 🔄 **Drag & Drop** zum Neuordnen von Items
+- 🔗 **Teilbare Links** für jedes Board
+- 📱 **Responsive Design** für alle Geräte
+- ⚡ **Schnell** dank Next.js 15 und Turbopack
 
-## 🚀 Technologie-Stack
+## 🚀 Tech Stack
 
-- **Frontend**: Next.js 14 (App Router), React, TypeScript
+- **Frontend**: Next.js 15, React 19, TypeScript
+- **Styling**: Tailwind CSS, Framer Motion
 - **Backend**: Next.js API Routes
 - **Datenbank**: Vercel Postgres
 - **Bild-Speicherung**: Vercel Blob Storage
-- **Styling**: Tailwind CSS + Framer Motion
-- **Drag & Drop**: @dnd-kit/core
-- **Deployment**: Vercel
+- **Drag & Drop**: @dnd-kit
 
-## 📦 Installation & Setup
+## 📋 Voraussetzungen
 
-### 1. Repository klonen
+- Node.js 18+ 
+- npm oder pnpm
+- Vercel Account (für Deployment)
+
+## 🛠️ Installation
+
+1. **Repository klonen:**
 
 ```bash
 git clone https://github.com/MCrackLP1/mood_boards.git
 cd mood_boards
 ```
 
-### 2. Dependencies installieren
+2. **Dependencies installieren:**
 
 ```bash
 npm install
 ```
 
-### 3. Umgebungsvariablen
+3. **Umgebungsvariablen einrichten:**
 
-Die Umgebungsvariablen werden automatisch von Vercel bereitgestellt. Für lokale Entwicklung:
+Für lokale Entwicklung:
 
 ```bash
-# Installiere Vercel CLI
 npm i -g vercel
-
-# Starte Entwicklungsserver mit Vercel
-vercel dev
+vercel login
+vercel link
+vercel env pull
 ```
 
-### 4. Datenbank initialisieren
+Dies lädt automatisch die Vercel Postgres und Blob Storage Credentials herunter.
 
-Die Datenbank-Tabellen werden automatisch erstellt, wenn du die App das erste Mal startest.
+## 🏃‍♂️ Entwicklung
 
-## 🏗️ Projekt-Struktur
+Lokalen Dev-Server starten:
+
+```bash
+npm run dev
+```
+
+Öffne [http://localhost:3000](http://localhost:3000) im Browser.
+
+### Datenbank initialisieren
+
+Beim ersten Start die Datenbank initialisieren:
+
+```
+http://localhost:3000/api/init
+```
+
+## 📦 Deployment
+
+### Vercel (empfohlen)
+
+1. **Repository mit Vercel verbinden:**
+
+```bash
+vercel
+```
+
+2. **Postgres Datenbank hinzufügen:**
+   - Im Vercel Dashboard: Storage → Create Database → Postgres
+
+3. **Blob Storage hinzufügen:**
+   - Im Vercel Dashboard: Storage → Create Store → Blob
+
+4. **Datenbank initialisieren:**
+   Nach dem Deployment:
+   ```
+   https://your-app.vercel.app/api/init
+   ```
+
+## 📁 Projektstruktur
 
 ```
 mood_boards/
 ├── app/
-│   ├── page.tsx                 # Dashboard mit Board-Übersicht
-│   ├── board/[id]/page.tsx      # Einzelnes Board mit Zeitleiste
-│   ├── api/
-│   │   ├── boards/route.ts      # Board CRUD API
-│   │   ├── items/route.ts       # Timeline Items API
-│   │   └── upload/route.ts      # Bild-Upload API
-│   └── layout.tsx               # Root Layout
+│   ├── api/              # API Routes
+│   │   ├── boards/       # Board CRUD
+│   │   ├── items/        # Timeline Items CRUD
+│   │   ├── upload/       # Bild-Upload
+│   │   └── init/         # DB Initialisierung
+│   ├── board/[id]/       # Board-Detail-Seite
+│   ├── page.tsx          # Dashboard
+│   ├── layout.tsx        # Root Layout
+│   └── globals.css       # Globale Styles
 ├── components/
-│   ├── BoardCard.tsx            # Board-Karte für Übersicht
-│   ├── Timeline.tsx             # Zeitleiste Komponente
-│   ├── TimelineItem.tsx         # Einzelnes Timeline-Item
-│   ├── CreateBoardModal.tsx     # Modal zum Erstellen neuer Boards
-│   └── ...
+│   ├── BoardCard.tsx          # Board Karte
+│   ├── CreateBoardModal.tsx   # Modal zum Erstellen
+│   ├── Timeline.tsx           # Zeitleiste Container
+│   └── TimelineItem.tsx       # Notiz/Bild Item
 ├── lib/
-│   ├── db.ts                    # Datenbank-Funktionen
-│   └── types.ts                 # TypeScript Typen
-└── ...
+│   ├── db.ts             # Datenbank Client
+│   └── types.ts          # TypeScript Types
+└── package.json
 ```
 
-## 🚀 Deployment
+## 🎮 Verwendung
 
-### Vercel (Empfohlen)
+1. **Board erstellen**: Klicke auf "Neues Board erstellen" auf der Startseite
 
-1. **Repository mit Vercel verbinden**
-   - Gehe zu [vercel.com](https://vercel.com)
-   - Importiere dein GitHub Repository
-   - Vercel erkennt automatisch Next.js und konfiguriert alles
+2. **Notizen hinzufügen**: Klicke auf den lila Button unten rechts (Stift-Icon)
 
-2. **Datenbank & Storage einrichten**
-   - Vercel Postgres: Wird automatisch aktiviert
-   - Vercel Blob: Wird automatisch aktiviert
-   - Keine manuelle Konfiguration nötig!
+3. **Bilder hochladen**: Klicke auf den blauen Button unten rechts (Bild-Icon)
 
-3. **Deploy**
-   - Push zu GitHub triggert automatisch einen neuen Deploy
-   - Deine App ist live!
+4. **Items verschieben**: Ziehe Notizen oder Bilder, um sie neu zu ordnen
 
-### Lokale Entwicklung
+5. **Items bearbeiten**: 
+   - Notizen: Klicke auf den Text zum Bearbeiten
+   - Items löschen: Hover über ein Item und klicke auf das X
 
-```bash
-# Mit Vercel CLI (empfohlen für volle Funktionalität)
-vercel dev
+6. **Board teilen**: Klicke auf "Teilen" oben rechts, um den Link zu kopieren
 
-# Oder normaler Next.js dev server
-npm run dev
-```
+## 🔧 Konfiguration
 
-## 📖 Verwendung
+### Tailwind CSS
 
-### Board erstellen
-1. Klicke auf "Neues Board erstellen"
-2. Gib einen Titel ein
-3. Klicke auf "Erstellen"
+Anpassungen in `tailwind.config.ts`:
+- Farben
+- Animationen
+- Breakpoints
 
-### Bilder hinzufügen
-- **Drag & Drop**: Ziehe Bilder direkt in die Zeitleiste
-- **Button**: Klicke auf "Bilder hochladen"
+### Next.js
 
-### Notizen hinzufügen
-- Klicke auf eine leere Stelle in der Zeitleiste
-- Bearbeite den Text direkt
+Konfiguration in `next.config.ts`:
+- Image Domains
+- API Routes
+- Build-Optionen
 
-### Teilen
-- Klicke auf "Teilen" im Header
-- Der Link wird in die Zwischenablage kopiert
-
-## 🎨 Design-Prinzipien
-
-- **Cinematisch**: Dunkles Theme mit subtilen Animationen
-- **Minimalistisch**: Fokussiert auf Content, nicht auf UI
-- **Intuitiv**: Drag & Drop für maximale Benutzerfreundlichkeit
-- **Responsive**: Funktioniert auf allen Geräten
-
-## 🔧 API-Referenz
+## 📄 API Referenz
 
 ### Boards
+
 - `GET /api/boards` - Alle Boards abrufen
 - `POST /api/boards` - Neues Board erstellen
 - `GET /api/boards/[id]` - Board mit Items laden
-- `PATCH /api/boards/[id]` - Board aktualisieren
 - `DELETE /api/boards/[id]` - Board löschen
 
 ### Timeline Items
-- `POST /api/items` - Neues Item erstellen
+
+- `POST /api/items` - Item hinzufügen
 - `PATCH /api/items/[id]` - Item aktualisieren
 - `DELETE /api/items/[id]` - Item löschen
 
 ### Upload
-- `POST /api/upload` - Bild hochladen
 
-## 🤝 Beitragen
+- `POST /api/upload` - Bild hochladen (multipart/form-data)
 
-1. Fork das Repository
-2. Erstelle einen Feature-Branch
-3. Committe deine Änderungen
-4. Push zu deinem Branch
-5. Erstelle einen Pull Request
+## 🐛 Troubleshooting
 
-## 📄 Lizenz
+### Datenbank-Verbindungsfehler
 
-Dieses Projekt ist unter der MIT-Lizenz lizenziert.
+```bash
+# Vercel Env Vars neu laden
+vercel env pull
+```
 
-## 📞 Support
+### Bilder werden nicht geladen
 
-Bei Fragen oder Problemen:
-- Erstelle ein Issue auf GitHub
-- Schaue in die Vercel-Dokumentation für Deploy-Fragen
+1. Überprüfe `BLOB_READ_WRITE_TOKEN` in den Env Vars
+2. Stelle sicher, dass Vercel Blob Storage aktiviert ist
+
+### Build-Fehler
+
+```bash
+# Cache löschen und neu bauen
+rm -rf .next
+npm run build
+```
+
+## 🤝 Contributing
+
+Pull Requests sind willkommen! Für größere Änderungen bitte zuerst ein Issue öffnen.
+
+## 📝 Lizenz
+
+MIT
+
+## 👤 Autor
+
+**MCrackLP1**
+- GitHub: [@MCrackLP1](https://github.com/MCrackLP1)
+
+## 🙏 Acknowledgments
+
+- Next.js Team für das fantastische Framework
+- Vercel für das großartige Hosting und die Infrastruktur
+- Framer Motion für die butterweichen Animationen
+
