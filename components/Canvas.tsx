@@ -129,15 +129,26 @@ export default function Canvas({ boardId, items: initialItems, onItemsChange }: 
         )
       );
 
-      await fetch(`/api/items/${id}`, {
+      const response = await fetch(`/api/items/${id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(updates),
       });
 
-      // Only refetch if content, time, or size changed (not for every drag move)
-      if (updates.content !== undefined || updates.time !== undefined || updates.width !== undefined || updates.height !== undefined) {
+      if (!response.ok) {
+        console.error('Failed to update item');
+        // Revert on error
         onItemsChange();
+        return;
+      }
+
+      // Only refetch if content or time changed
+      // For position/size, keep optimistic update to avoid flickering
+      if (updates.content !== undefined || updates.time !== undefined) {
+        // Small delay to ensure DB has updated
+        setTimeout(() => {
+          onItemsChange();
+        }, 100);
       }
     } catch (error) {
       console.error('Error updating item:', error);

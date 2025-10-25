@@ -48,12 +48,12 @@ export default function CanvasItem({ item, onUpdate, onDelete }: CanvasItemProps
     }
   }, [item.content, item.type, item.width, item.height]);
 
-  // Sync dimensions with item
+  // Sync dimensions with item - but not during resize
   useEffect(() => {
-    if (item.width && item.height) {
+    if (!isResizing && item.width && item.height) {
       setDimensions({ width: item.width, height: item.height });
     }
-  }, [item.width, item.height]);
+  }, [item.width, item.height, isResizing]);
 
   const handleMouseDown = (e: React.MouseEvent) => {
     if (isEditing || !e.shiftKey) {
@@ -169,11 +169,18 @@ export default function CanvasItem({ item, onUpdate, onDelete }: CanvasItemProps
       dragRef.current = null;
     }
     if (isResizing) {
+      const finalWidth = dimensions.width;
+      const finalHeight = dimensions.height;
+      
       setIsResizing(false);
       setResizeHandle(null);
-      // Save final dimensions
-      onUpdate(item.id, { width: dimensions.width, height: dimensions.height });
       resizeRef.current = null;
+      
+      // Save final dimensions with rounded values
+      onUpdate(item.id, { 
+        width: Math.round(finalWidth), 
+        height: Math.round(finalHeight) 
+      });
     }
   };
 
