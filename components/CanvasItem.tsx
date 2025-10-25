@@ -20,11 +20,13 @@ export default function CanvasItem({ item, onUpdate, onDelete }: CanvasItemProps
   const [isDragging, setIsDragging] = useState(false);
   const [isResizing, setIsResizing] = useState(false);
   const [resizeHandle, setResizeHandle] = useState<ResizeHandle>(null);
-  const [dimensions, setDimensions] = useState({
+  const [imageAspectRatio, setImageAspectRatio] = useState<number | null>(null);
+  
+  // Initialize dimensions only once from item
+  const [dimensions, setDimensions] = useState(() => ({
     width: item.width || (item.type === 'note' ? 300 : 400),
     height: item.height || (item.type === 'note' ? 150 : 300),
-  });
-  const [imageAspectRatio, setImageAspectRatio] = useState<number | null>(null);
+  }));
   
   const dragRef = useRef<{ startX: number; startY: number; initialX: number; initialY: number } | null>(null);
   const resizeRef = useRef<{ startX: number; startY: number; initialWidth: number; initialHeight: number; initialLeft: number; initialTop: number } | null>(null);
@@ -48,12 +50,15 @@ export default function CanvasItem({ item, onUpdate, onDelete }: CanvasItemProps
     }
   }, [item.content, item.type, item.width, item.height]);
 
-  // Sync dimensions with item - but not during resize
+  // Only update dimensions if they come from database and we're not currently interacting
   useEffect(() => {
-    if (!isResizing && item.width && item.height) {
-      setDimensions({ width: item.width, height: item.height });
+    if (!isResizing && !isDragging && item.width && item.height) {
+      // Only update if significantly different (to avoid fighting with local state)
+      if (Math.abs(dimensions.width - item.width) > 5 || Math.abs(dimensions.height - item.height) > 5) {
+        setDimensions({ width: item.width, height: item.height });
+      }
     }
-  }, [item.width, item.height, isResizing]);
+  }, [item.width, item.height, isResizing, isDragging, dimensions.width, dimensions.height]);
 
   const handleMouseDown = (e: React.MouseEvent) => {
     if (isEditing || !e.shiftKey) {
@@ -169,8 +174,16 @@ export default function CanvasItem({ item, onUpdate, onDelete }: CanvasItemProps
       dragRef.current = null;
     }
     if (isResizing) {
-      const finalWidth = dimensions.width;
-      const finalHeight = dimensions.height;
+      const finalWidth = Math.round(dimensions.width);
+      const finalHeight = Math.round(dimensions.height);
+      
+      console.log('Resize completed:', { 
+        itemId: item.id, 
+        finalWidth, 
+        finalHeight,
+        previousWidth: item.width,
+        previousHeight: item.height
+      });
       
       setIsResizing(false);
       setResizeHandle(null);
@@ -178,8 +191,8 @@ export default function CanvasItem({ item, onUpdate, onDelete }: CanvasItemProps
       
       // Save final dimensions with rounded values
       onUpdate(item.id, { 
-        width: Math.round(finalWidth), 
-        height: Math.round(finalHeight) 
+        width: finalWidth, 
+        height: finalHeight 
       });
     }
   };

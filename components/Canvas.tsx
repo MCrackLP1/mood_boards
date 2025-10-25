@@ -122,6 +122,8 @@ export default function Canvas({ boardId, items: initialItems, onItemsChange }: 
     updates: { content?: string; position_x?: number; position_y?: number; width?: number; height?: number; time?: string }
   ) => {
     try {
+      console.log('Updating item:', { id, updates });
+      
       // Optimistic update
       setItems((prevItems) =>
         prevItems.map((item) =>
@@ -136,11 +138,15 @@ export default function Canvas({ boardId, items: initialItems, onItemsChange }: 
       });
 
       if (!response.ok) {
-        console.error('Failed to update item');
+        const errorText = await response.text();
+        console.error('Failed to update item:', errorText);
         // Revert on error
         onItemsChange();
         return;
       }
+
+      const result = await response.json();
+      console.log('Update successful:', result);
 
       // Only refetch if content or time changed
       // For position/size, keep optimistic update to avoid flickering
