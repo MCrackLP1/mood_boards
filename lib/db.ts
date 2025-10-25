@@ -21,6 +21,7 @@ export async function initDatabase() {
         content TEXT NOT NULL,
         position_y INTEGER NOT NULL DEFAULT 0,
         position_x INTEGER NOT NULL DEFAULT 0,
+        time VARCHAR(5),
         created_at TIMESTAMP DEFAULT NOW()
       )
     `;

@@ -12,6 +12,7 @@ export interface TimelineItem {
   content: string;
   position_y: number;
   position_x: number;
+  time?: string; // Uhrzeit im Format HH:MM
   created_at: Date;
 }
 
@@ -25,11 +26,13 @@ export type CreateItemInput = {
   content: string;
   position_y: number;
   position_x: number;
+  time?: string;
 };
 
 export type UpdateItemInput = {
   content?: string;
   position_y?: number;
   position_x?: number;
+  time?: string;
 };
 

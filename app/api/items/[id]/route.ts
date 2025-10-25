@@ -41,6 +41,10 @@ export async function PATCH(
       updates.push(`position_x = $${valueIndex++}`);
       values.push(body.position_x);
     }
+    if (body.time !== undefined) {
+      updates.push(`time = $${valueIndex++}`);
+      values.push(body.time);
+    }
 
     if (updates.length === 0) {
       return NextResponse.json(

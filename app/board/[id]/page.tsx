@@ -3,7 +3,7 @@
 import { useEffect, useState, use } from 'react';
 import { motion } from 'framer-motion';
 import { useRouter } from 'next/navigation';
-import Timeline from '@/components/Timeline';
+import Canvas from '@/components/Canvas';
 import type { Board, TimelineItem } from '@/lib/types';
 
 export default function BoardPage({
@@ -102,13 +102,13 @@ export default function BoardPage({
         </div>
       </motion.header>
 
-      {/* Timeline */}
+      {/* Canvas */}
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 0.6, delay: 0.2 }}
       >
-        <Timeline
+        <Canvas
           boardId={board.id}
           items={items}
           onItemsChange={fetchBoardData}
