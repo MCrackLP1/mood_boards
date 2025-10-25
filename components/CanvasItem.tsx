@@ -7,35 +7,65 @@ import type { TimelineItem as TimelineItemType } from '@/lib/types';
 
 interface CanvasItemProps {
   item: TimelineItemType;
-  onUpdate: (id: number, updates: { content?: string; position_x?: number; position_y?: number; time?: string }) => void;
+  onUpdate: (id: number, updates: { content?: string; position_x?: number; position_y?: number; width?: number; height?: number; time?: string }) => void;
   onDelete: (id: number) => void;
 }
+
+type ResizeHandle = 'se' | 'sw' | 'ne' | 'nw' | 'e' | 'w' | 'n' | 's' | null;
 
 export default function CanvasItem({ item, onUpdate, onDelete }: CanvasItemProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [editContent, setEditContent] = useState(item.content);
   const [editTime, setEditTime] = useState(item.time || '');
   const [isDragging, setIsDragging] = useState(false);
-  const [imageSize, setImageSize] = useState<{ width: number; height: number } | null>(null);
+  const [isResizing, setIsResizing] = useState(false);
+  const [resizeHandle, setResizeHandle] = useState<ResizeHandle>(null);
+  const [dimensions, setDimensions] = useState({
+    width: item.width || (item.type === 'note' ? 300 : 400),
+    height: item.height || (item.type === 'note' ? 150 : 300),
+  });
+  const [imageAspectRatio, setImageAspectRatio] = useState<number | null>(null);
+  
   const dragRef = useRef<{ startX: number; startY: number; initialX: number; initialY: number } | null>(null);
+  const resizeRef = useRef<{ startX: number; startY: number; initialWidth: number; initialHeight: number; initialLeft: number; initialTop: number } | null>(null);
 
   useEffect(() => {
     if (item.type === 'image') {
       const img = document.createElement('img');
       img.src = item.content;
       img.onload = () => {
-        // Max width 400px, maintain aspect ratio
-        const maxWidth = 400;
-        const ratio = img.naturalHeight / img.naturalWidth;
-        const width = Math.min(maxWidth, img.naturalWidth);
-        const height = width * ratio;
-        setImageSize({ width, height });
+        const ratio = img.naturalWidth / img.naturalHeight;
+        setImageAspectRatio(ratio);
+        
+        // Set initial size if not set
+        if (!item.width || !item.height) {
+          const maxWidth = 400;
+          const width = Math.min(maxWidth, img.naturalWidth);
+          const height = width / ratio;
+          setDimensions({ width, height });
+        }
       };
     }
-  }, [item.content, item.type]);
+  }, [item.content, item.type, item.width, item.height]);
+
+  // Sync dimensions with item
+  useEffect(() => {
+    if (item.width && item.height) {
+      setDimensions({ width: item.width, height: item.height });
+    }
+  }, [item.width, item.height]);
 
   const handleMouseDown = (e: React.MouseEvent) => {
-    if (isEditing) return;
+    if (isEditing || !e.shiftKey) {
+      // Without Shift: open editing
+      if (!e.shiftKey && !isEditing && item.type === 'note') {
+        setIsEditing(true);
+      }
+      return;
+    }
+    
+    // With Shift: start dragging
+    e.preventDefault();
     setIsDragging(true);
     dragRef.current = {
       startX: e.clientX,
@@ -45,26 +75,110 @@ export default function CanvasItem({ item, onUpdate, onDelete }: CanvasItemProps
     };
   };
 
+  const handleResizeMouseDown = (e: React.MouseEvent, handle: ResizeHandle) => {
+    e.stopPropagation();
+    e.preventDefault();
+    setIsResizing(true);
+    setResizeHandle(handle);
+    
+    resizeRef.current = {
+      startX: e.clientX,
+      startY: e.clientY,
+      initialWidth: dimensions.width,
+      initialHeight: dimensions.height,
+      initialLeft: item.position_x,
+      initialTop: item.position_y,
+    };
+  };
+
   const handleMouseMove = (e: MouseEvent) => {
-    if (!isDragging || !dragRef.current) return;
+    if (isDragging && dragRef.current) {
+      const deltaX = e.clientX - dragRef.current.startX;
+      const deltaY = e.clientY - dragRef.current.startY;
 
-    const deltaX = e.clientX - dragRef.current.startX;
-    const deltaY = e.clientY - dragRef.current.startY;
+      const newX = dragRef.current.initialX + deltaX;
+      const newY = dragRef.current.initialY + deltaY;
 
-    const newX = dragRef.current.initialX + deltaX;
-    const newY = dragRef.current.initialY + deltaY;
+      onUpdate(item.id, { position_x: newX, position_y: newY });
+    } else if (isResizing && resizeRef.current && resizeHandle) {
+      const deltaX = e.clientX - resizeRef.current.startX;
+      const deltaY = e.clientY - resizeRef.current.startY;
 
-    // Update position via callback (will trigger re-render from parent)
-    onUpdate(item.id, { position_x: newX, position_y: newY });
+      let newWidth = resizeRef.current.initialWidth;
+      let newHeight = resizeRef.current.initialHeight;
+      let newX = item.position_x;
+      let newY = item.position_y;
+
+      // Calculate new dimensions based on resize handle
+      switch (resizeHandle) {
+        case 'se': // Bottom-right
+          newWidth = Math.max(100, resizeRef.current.initialWidth + deltaX);
+          newHeight = Math.max(50, resizeRef.current.initialHeight + deltaY);
+          break;
+        case 'sw': // Bottom-left
+          newWidth = Math.max(100, resizeRef.current.initialWidth - deltaX);
+          newHeight = Math.max(50, resizeRef.current.initialHeight + deltaY);
+          newX = resizeRef.current.initialLeft + deltaX;
+          break;
+        case 'ne': // Top-right
+          newWidth = Math.max(100, resizeRef.current.initialWidth + deltaX);
+          newHeight = Math.max(50, resizeRef.current.initialHeight - deltaY);
+          newY = resizeRef.current.initialTop + deltaY;
+          break;
+        case 'nw': // Top-left
+          newWidth = Math.max(100, resizeRef.current.initialWidth - deltaX);
+          newHeight = Math.max(50, resizeRef.current.initialHeight - deltaY);
+          newX = resizeRef.current.initialLeft + deltaX;
+          newY = resizeRef.current.initialTop + deltaY;
+          break;
+        case 'e': // Right
+          newWidth = Math.max(100, resizeRef.current.initialWidth + deltaX);
+          break;
+        case 'w': // Left
+          newWidth = Math.max(100, resizeRef.current.initialWidth - deltaX);
+          newX = resizeRef.current.initialLeft + deltaX;
+          break;
+        case 'n': // Top
+          newHeight = Math.max(50, resizeRef.current.initialHeight - deltaY);
+          newY = resizeRef.current.initialTop + deltaY;
+          break;
+        case 's': // Bottom
+          newHeight = Math.max(50, resizeRef.current.initialHeight + deltaY);
+          break;
+      }
+
+      // For images, maintain aspect ratio if available
+      if (item.type === 'image' && imageAspectRatio) {
+        if (resizeHandle.includes('e') || resizeHandle.includes('w')) {
+          newHeight = newWidth / imageAspectRatio;
+        } else if (resizeHandle.includes('n') || resizeHandle.includes('s')) {
+          newWidth = newHeight * imageAspectRatio;
+        }
+      }
+
+      setDimensions({ width: newWidth, height: newHeight });
+      if (newX !== item.position_x || newY !== item.position_y) {
+        onUpdate(item.id, { position_x: newX, position_y: newY });
+      }
+    }
   };
 
   const handleMouseUp = () => {
-    setIsDragging(false);
-    dragRef.current = null;
+    if (isDragging) {
+      setIsDragging(false);
+      dragRef.current = null;
+    }
+    if (isResizing) {
+      setIsResizing(false);
+      setResizeHandle(null);
+      // Save final dimensions
+      onUpdate(item.id, { width: dimensions.width, height: dimensions.height });
+      resizeRef.current = null;
+    }
   };
 
   useEffect(() => {
-    if (isDragging) {
+    if (isDragging || isResizing) {
       window.addEventListener('mousemove', handleMouseMove);
       window.addEventListener('mouseup', handleMouseUp);
       return () => {
@@ -73,7 +187,7 @@ export default function CanvasItem({ item, onUpdate, onDelete }: CanvasItemProps
       };
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isDragging]);
+  }, [isDragging, isResizing]);
 
   const handleSave = () => {
     const updates: { content?: string; time?: string } = {};
@@ -90,10 +204,6 @@ export default function CanvasItem({ item, onUpdate, onDelete }: CanvasItemProps
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' && !e.shiftKey && item.type === 'note') {
-      e.preventDefault();
-      handleSave();
-    }
     if (e.key === 'Escape') {
       setEditContent(item.content);
       setEditTime(item.time || '');
@@ -110,13 +220,15 @@ export default function CanvasItem({ item, onUpdate, onDelete }: CanvasItemProps
         position: 'absolute',
         left: `${item.position_x}px`,
         top: `${item.position_y}px`,
-        cursor: isDragging ? 'grabbing' : 'grab',
-        zIndex: isDragging ? 1000 : 10,
+        width: `${dimensions.width}px`,
+        height: `${dimensions.height}px`,
+        cursor: isDragging ? 'grabbing' : (isResizing ? 'nwse-resize' : 'default'),
+        zIndex: isDragging || isResizing ? 1000 : 10,
       }}
       className="group"
       onMouseDown={handleMouseDown}
     >
-      <div className={`glass-strong rounded-2xl p-4 shadow-xl transition-all duration-300 ${isDragging ? 'scale-105 shadow-2xl shadow-purple-500/30' : 'hover:scale-[1.02]'}`}>
+      <div className={`h-full glass-strong rounded-2xl p-4 shadow-xl transition-all duration-300 ${isDragging || isResizing ? 'scale-105 shadow-2xl shadow-purple-500/30' : ''}`}>
         {/* Delete button */}
         <button
           onClick={(e) => {
@@ -130,6 +242,13 @@ export default function CanvasItem({ item, onUpdate, onDelete }: CanvasItemProps
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
           </svg>
         </button>
+
+        {/* Hint text */}
+        {!isEditing && (
+          <div className="absolute top-2 left-2 text-xs text-gray-500 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+            Shift + Drag zum Verschieben
+          </div>
+        )}
 
         {/* Time display/edit */}
         {(item.time || isEditing) && (
@@ -153,55 +272,96 @@ export default function CanvasItem({ item, onUpdate, onDelete }: CanvasItemProps
 
         {/* Content */}
         {item.type === 'image' ? (
-          <div 
-            className="relative rounded-xl overflow-hidden"
-            style={{
-              width: imageSize ? `${imageSize.width}px` : '400px',
-              height: imageSize ? `${imageSize.height}px` : '300px',
-            }}
-          >
+          <div className="relative w-full h-full rounded-xl overflow-hidden">
             <Image
               src={item.content}
               alt="Canvas image"
               fill
               className="object-contain"
-              sizes="400px"
+              sizes={`${dimensions.width}px`}
               priority
             />
           </div>
         ) : (
-          <div onClick={(e) => { e.stopPropagation(); setIsEditing(true); }} onMouseDown={(e) => e.stopPropagation()}>
+          <div 
+            className="h-full overflow-auto"
+            onMouseDown={(e) => e.stopPropagation()}
+          >
             {isEditing ? (
-              <div className="space-y-2">
+              <div className="space-y-2 h-full flex flex-col">
                 <textarea
                   value={editContent}
                   onChange={(e) => setEditContent(e.target.value)}
-                  onBlur={handleSave}
                   onKeyDown={handleKeyDown}
-                  className="w-full min-w-[250px] min-h-[100px] px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder-gray-500 focus:outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20 resize-none"
+                  className="flex-1 w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder-gray-500 focus:outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20 resize-none"
                   autoFocus
                 />
-                <button
-                  onClick={handleSave}
-                  className="w-full px-3 py-1 text-sm rounded-lg bg-purple-500/20 hover:bg-purple-500/30 text-purple-300 transition-all"
-                >
-                  Speichern
-                </button>
+                <div className="flex gap-2">
+                  <button
+                    onClick={handleSave}
+                    className="flex-1 px-3 py-2 text-sm rounded-lg bg-purple-500/20 hover:bg-purple-500/30 text-purple-300 transition-all"
+                  >
+                    Speichern
+                  </button>
+                  <button
+                    onClick={() => {
+                      setEditContent(item.content);
+                      setEditTime(item.time || '');
+                      setIsEditing(false);
+                    }}
+                    className="px-3 py-2 text-sm rounded-lg bg-gray-500/20 hover:bg-gray-500/30 text-gray-300 transition-all"
+                  >
+                    Abbrechen
+                  </button>
+                </div>
               </div>
             ) : (
-              <p className="text-gray-200 whitespace-pre-wrap min-w-[200px]">{item.content}</p>
+              <p className="text-gray-200 whitespace-pre-wrap cursor-text">{item.content}</p>
             )}
           </div>
         )}
 
-        {/* Drag handle indicator */}
-        <div className="absolute top-2 right-2 text-gray-500 opacity-0 group-hover:opacity-50 transition-opacity pointer-events-none">
-          <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-            <path d="M9 3h2v2H9V3zm0 4h2v2H9V7zm0 4h2v2H9v-2zm0 4h2v2H9v-2zm0 4h2v2H9v-2zm4-16h2v2h-2V3zm0 4h2v2h-2V7zm0 4h2v2h-2v-2zm0 4h2v2h-2v-2zm0 4h2v2h-2v-2z" />
-          </svg>
-        </div>
+        {/* Resize handles - only show on hover and not while editing */}
+        {!isEditing && (
+          <>
+            {/* Corner handles */}
+            <div
+              className="absolute -bottom-2 -right-2 w-4 h-4 bg-purple-500 rounded-full opacity-0 group-hover:opacity-100 transition-opacity cursor-nwse-resize z-20"
+              onMouseDown={(e) => handleResizeMouseDown(e, 'se')}
+            />
+            <div
+              className="absolute -bottom-2 -left-2 w-4 h-4 bg-purple-500 rounded-full opacity-0 group-hover:opacity-100 transition-opacity cursor-nesw-resize z-20"
+              onMouseDown={(e) => handleResizeMouseDown(e, 'sw')}
+            />
+            <div
+              className="absolute -top-2 -right-2 w-4 h-4 bg-purple-500 rounded-full opacity-0 group-hover:opacity-100 transition-opacity cursor-nesw-resize z-20"
+              onMouseDown={(e) => handleResizeMouseDown(e, 'ne')}
+            />
+            <div
+              className="absolute -top-2 -left-2 w-4 h-4 bg-purple-500 rounded-full opacity-0 group-hover:opacity-100 transition-opacity cursor-nwse-resize z-20"
+              onMouseDown={(e) => handleResizeMouseDown(e, 'nw')}
+            />
+
+            {/* Edge handles */}
+            <div
+              className="absolute top-1/2 -right-1 w-2 h-8 -translate-y-1/2 bg-purple-500/50 rounded opacity-0 group-hover:opacity-100 transition-opacity cursor-ew-resize z-20"
+              onMouseDown={(e) => handleResizeMouseDown(e, 'e')}
+            />
+            <div
+              className="absolute top-1/2 -left-1 w-2 h-8 -translate-y-1/2 bg-purple-500/50 rounded opacity-0 group-hover:opacity-100 transition-opacity cursor-ew-resize z-20"
+              onMouseDown={(e) => handleResizeMouseDown(e, 'w')}
+            />
+            <div
+              className="absolute -top-1 left-1/2 w-8 h-2 -translate-x-1/2 bg-purple-500/50 rounded opacity-0 group-hover:opacity-100 transition-opacity cursor-ns-resize z-20"
+              onMouseDown={(e) => handleResizeMouseDown(e, 'n')}
+            />
+            <div
+              className="absolute -bottom-1 left-1/2 w-8 h-2 -translate-x-1/2 bg-purple-500/50 rounded opacity-0 group-hover:opacity-100 transition-opacity cursor-ns-resize z-20"
+              onMouseDown={(e) => handleResizeMouseDown(e, 's')}
+            />
+          </>
+        )}
       </div>
     </motion.div>
   );
 }
-

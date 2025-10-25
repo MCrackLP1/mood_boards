@@ -22,13 +22,15 @@ export async function POST(request: NextRequest) {
     }
 
     const result = await sql<TimelineItem>`
-      INSERT INTO timeline_items (board_id, type, content, position_y, position_x, time)
+      INSERT INTO timeline_items (board_id, type, content, position_y, position_x, width, height, time)
       VALUES (
         ${body.board_id},
         ${body.type},
         ${body.content},
         ${body.position_y || 0},
         ${body.position_x || 0},
+        ${body.width || null},
+        ${body.height || null},
         ${body.time || null}
       )
       RETURNING *

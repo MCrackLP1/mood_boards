@@ -37,6 +37,8 @@ export default function Canvas({ boardId, items: initialItems, onItemsChange }: 
           content: 'Neue Notiz...',
           position_x: scrollX + viewportWidth / 2 - 150,
           position_y: scrollY + viewportHeight / 2 - 75,
+          width: 300,
+          height: 150,
         }),
       });
 
@@ -93,6 +95,8 @@ export default function Canvas({ boardId, items: initialItems, onItemsChange }: 
           content: url,
           position_x: scrollX + viewportWidth / 2 - 200,
           position_y: scrollY + viewportHeight / 2 - 150,
+          width: 400,
+          height: 300,
         }),
       });
 
@@ -115,7 +119,7 @@ export default function Canvas({ boardId, items: initialItems, onItemsChange }: 
 
   const handleUpdateItem = async (
     id: number,
-    updates: { content?: string; position_x?: number; position_y?: number; time?: string }
+    updates: { content?: string; position_x?: number; position_y?: number; width?: number; height?: number; time?: string }
   ) => {
     try {
       // Optimistic update
@@ -131,8 +135,8 @@ export default function Canvas({ boardId, items: initialItems, onItemsChange }: 
         body: JSON.stringify(updates),
       });
 
-      // Only refetch if content or time changed (not for every drag move)
-      if (updates.content !== undefined || updates.time !== undefined) {
+      // Only refetch if content, time, or size changed (not for every drag move)
+      if (updates.content !== undefined || updates.time !== undefined || updates.width !== undefined || updates.height !== undefined) {
         onItemsChange();
       }
     } catch (error) {

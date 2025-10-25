@@ -10,6 +10,17 @@ export async function GET() {
       ADD COLUMN IF NOT EXISTS time VARCHAR(5)
     `;
 
+    // Add width and height columns if they don't exist
+    await sql`
+      ALTER TABLE timeline_items 
+      ADD COLUMN IF NOT EXISTS width INTEGER
+    `;
+
+    await sql`
+      ALTER TABLE timeline_items 
+      ADD COLUMN IF NOT EXISTS height INTEGER
+    `;
+
     return NextResponse.json({ 
       success: true, 
       message: 'Migration completed successfully' 
