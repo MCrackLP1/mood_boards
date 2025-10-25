@@ -15,9 +15,34 @@ export default function Canvas({ boardId, items: initialItems, onItemsChange }: 
   const [items, setItems] = useState(initialItems);
   const [isUploading, setIsUploading] = useState(false);
 
-  // Sync local state with props when items change
+  // Sync local state with props when items change - but preserve local position/size
   useEffect(() => {
-    setItems(initialItems);
+    setItems(prevItems => {
+      // If first load or no previous items, use initialItems as-is
+      if (prevItems.length === 0) {
+        return initialItems;
+      }
+      
+      // Create a map of current items for quick lookup
+      const prevItemsMap = new Map(prevItems.map(item => [item.id, item]));
+      
+      // Merge: prefer local position/size over server values (to keep optimistic updates)
+      return initialItems.map(newItem => {
+        const prevItem = prevItemsMap.get(newItem.id);
+        if (prevItem) {
+          // Prefer local values for position and dimensions
+          return {
+            ...newItem,
+            position_x: prevItem.position_x,
+            position_y: prevItem.position_y,
+            width: prevItem.width ?? newItem.width,
+            height: prevItem.height ?? newItem.height,
+          };
+        }
+        // New item, use server values
+        return newItem;
+      });
+    });
   }, [initialItems]);
 
   const handleAddNote = async () => {

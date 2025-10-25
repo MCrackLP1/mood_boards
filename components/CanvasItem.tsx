@@ -299,7 +299,6 @@ export default function CanvasItem({ item, onUpdate, onDelete }: CanvasItemProps
               fill
               className="object-contain"
               sizes={`${dimensions.width}px`}
-              priority
             />
           </div>
         ) : (
