@@ -67,7 +67,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Validate time format (HH:MM)
-    let timeValue = body.time || null;
+    const timeValue = body.time || null;
     if (timeValue !== null) {
       if (typeof timeValue !== 'string') {
         return NextResponse.json(

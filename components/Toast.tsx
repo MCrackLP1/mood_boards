@@ -22,10 +22,11 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
   const timersRef = useRef<Map<string, NodeJS.Timeout>>(new Map());
 
   useEffect(() => {
+    const timers = timersRef.current;
     return () => {
       // Cleanup all timers on unmount
-      timersRef.current.forEach((timer) => clearTimeout(timer));
-      timersRef.current.clear();
+      timers.forEach((timer) => clearTimeout(timer));
+      timers.clear();
     };
   }, []);
 

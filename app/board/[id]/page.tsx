@@ -262,7 +262,7 @@ export default function BoardPage({
               Board löschen?
             </h2>
             <p className="text-gray-300 mb-6">
-              Möchtest du das Board "{board.title}" wirklich löschen? Diese Aktion kann nicht rückgängig gemacht werden.
+              Möchtest du das Board &quot;{board.title}&quot; wirklich löschen? Diese Aktion kann nicht rückgängig gemacht werden.
             </p>
             <div className="flex gap-3">
               <button
