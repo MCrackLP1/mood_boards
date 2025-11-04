@@ -97,8 +97,8 @@ export async function PATCH(
     }
 
     // Validate dimensions
-    let updatedWidth = currentItem.width;
-    let updatedHeight = currentItem.height;
+    let updatedWidth: number | null | undefined = currentItem.width;
+    let updatedHeight: number | null | undefined = currentItem.height;
     if (body.width !== undefined) {
       if (body.width === null) {
         updatedWidth = null;
