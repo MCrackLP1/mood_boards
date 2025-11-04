@@ -72,7 +72,7 @@ export async function PATCH(
       updatedContent = trimmedContent;
     }
 
-    // Validate positions
+    // Validate positions (round to integers for INTEGER column)
     let updatedPositionY = currentItem.position_y;
     let updatedPositionX = currentItem.position_x;
     if (body.position_y !== undefined) {
@@ -83,7 +83,7 @@ export async function PATCH(
           { status: 400 }
         );
       }
-      updatedPositionY = posY;
+      updatedPositionY = Math.round(posY);
     }
     if (body.position_x !== undefined) {
       const posX = Number(body.position_x);
@@ -93,7 +93,7 @@ export async function PATCH(
           { status: 400 }
         );
       }
-      updatedPositionX = posX;
+      updatedPositionX = Math.round(posX);
     }
 
     // Validate dimensions

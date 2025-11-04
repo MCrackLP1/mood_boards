@@ -50,9 +50,9 @@ export async function POST(request: NextRequest) {
       );
     }
     
-    // Clamp positions to reasonable bounds (allow negative for canvas scrolling)
-    const clampedPositionX = Math.max(-100000, Math.min(100000, positionX));
-    const clampedPositionY = Math.max(-100000, Math.min(100000, positionY));
+    // Clamp positions to reasonable bounds and round to integers (DB requires INTEGER)
+    const clampedPositionX = Math.round(Math.max(-100000, Math.min(100000, positionX)));
+    const clampedPositionY = Math.round(Math.max(-100000, Math.min(100000, positionY)));
 
     // Validate dimensions if provided
     const width = body.width ? Number(body.width) : null;
