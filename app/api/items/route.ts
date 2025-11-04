@@ -40,7 +40,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Validate positions (reasonable bounds)
+    // Validate positions (reasonable bounds, allow negative for scrolling)
     const positionX = Number(body.position_x) || 0;
     const positionY = Number(body.position_y) || 0;
     if (!Number.isFinite(positionX) || !Number.isFinite(positionY)) {
@@ -49,6 +49,10 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       );
     }
+    
+    // Clamp positions to reasonable bounds (allow negative for canvas scrolling)
+    const clampedPositionX = Math.max(-100000, Math.min(100000, positionX));
+    const clampedPositionY = Math.max(-100000, Math.min(100000, positionY));
 
     // Validate dimensions if provided
     const width = body.width ? Number(body.width) : null;
@@ -99,11 +103,11 @@ export async function POST(request: NextRequest) {
         ${boardId},
         ${body.type},
         ${body.content.trim()},
-        ${positionY},
-        ${positionX},
-        ${width},
-        ${height},
-        ${timeValue}
+        ${clampedPositionY},
+        ${clampedPositionX},
+        ${width ?? null},
+        ${height ?? null},
+        ${timeValue ?? null}
       )
       RETURNING *
     `;
@@ -111,8 +115,9 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ item: result.rows[0] }, { status: 201 });
   } catch (error) {
     console.error('Error creating item:', error);
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
     return NextResponse.json(
-      { error: 'Failed to create item' },
+      { error: 'Failed to create item', details: errorMessage },
       { status: 500 }
     );
   }
