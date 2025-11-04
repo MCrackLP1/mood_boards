@@ -79,9 +79,15 @@ export default function Canvas({ boardId, items: initialItems, onItemsChange }: 
         showToast('Notiz erfolgreich hinzugefügt', 'success');
         onItemsChange();
       } else {
-        const errorData = await response.json();
-        console.error('Error adding note:', errorData);
-        showToast('Fehler beim Hinzufügen der Notiz: ' + (errorData.error || 'Unbekannter Fehler'), 'error');
+        let errorMessage = 'Unbekannter Fehler';
+        try {
+          const errorData = await response.json();
+          errorMessage = errorData.error || errorData.details || 'Unbekannter Fehler';
+          console.error('Error adding note:', errorData);
+        } catch (e) {
+          console.error('Error parsing error response:', e);
+        }
+        showToast('Fehler beim Hinzufügen der Notiz: ' + errorMessage, 'error');
       }
     } catch (error) {
       console.error('Error adding note:', error);
@@ -146,9 +152,15 @@ export default function Canvas({ boardId, items: initialItems, onItemsChange }: 
         showToast('Bild erfolgreich hochgeladen', 'success');
         onItemsChange();
       } else {
-        const errorData = await itemResponse.json();
-        console.error('Error creating item:', errorData);
-        showToast('Fehler beim Erstellen des Items: ' + (errorData.error || 'Unbekannter Fehler'), 'error');
+        let errorMessage = 'Unbekannter Fehler';
+        try {
+          const errorData = await itemResponse.json();
+          errorMessage = errorData.error || errorData.details || 'Unbekannter Fehler';
+          console.error('Error creating item:', errorData);
+        } catch (e) {
+          console.error('Error parsing error response:', e);
+        }
+        showToast('Fehler beim Erstellen des Items: ' + errorMessage, 'error');
       }
     } catch (error) {
       console.error('Error uploading image:', error);
