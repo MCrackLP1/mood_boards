@@ -129,7 +129,7 @@ export async function PATCH(
     }
 
     // Validate time format
-    let updatedTime = currentItem.time;
+    let updatedTime: string | null | undefined = currentItem.time;
     if (body.time !== undefined) {
       if (body.time === null || body.time === '') {
         updatedTime = null;
