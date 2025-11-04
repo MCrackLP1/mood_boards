@@ -1,33 +1,39 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import BoardCard from '@/components/BoardCard';
 import CreateBoardModal from '@/components/CreateBoardModal';
+import { useToast } from '@/components/Toast';
 import type { Board } from '@/lib/types';
 
 export default function HomePage() {
   const [boards, setBoards] = useState<Board[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const { showToast } = useToast();
 
-  useEffect(() => {
-    fetchBoards();
-  }, []);
-
-  const fetchBoards = async () => {
+  const fetchBoards = useCallback(async () => {
     try {
       const response = await fetch('/api/boards');
+      if (!response.ok) {
+        throw new Error('Failed to fetch boards');
+      }
       const data = await response.json();
       setBoards(data.boards || []);
     } catch (error) {
       console.error('Error fetching boards:', error);
+      showToast('Fehler beim Laden der Boards', 'error');
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [showToast]);
 
-  const handleCreateBoard = async (title: string) => {
+  useEffect(() => {
+    fetchBoards();
+  }, [fetchBoards]);
+
+  const handleCreateBoard = useCallback(async (title: string) => {
     try {
       const response = await fetch('/api/boards', {
         method: 'POST',
@@ -36,13 +42,18 @@ export default function HomePage() {
       });
 
       if (response.ok) {
+        showToast('Board erfolgreich erstellt', 'success');
         await fetchBoards();
         setIsModalOpen(false);
+      } else {
+        const errorData = await response.json();
+        showToast('Fehler beim Erstellen: ' + (errorData.error || 'Unbekannter Fehler'), 'error');
       }
     } catch (error) {
       console.error('Error creating board:', error);
+      showToast('Netzwerkfehler beim Erstellen des Boards', 'error');
     }
-  };
+  }, [fetchBoards, showToast]);
 
   return (
     <div className="min-h-screen">

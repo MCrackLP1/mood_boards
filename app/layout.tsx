@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import { ToastProviderWrapper } from "@/components/ToastProviderWrapper";
 
 export const metadata: Metadata = {
   title: "Mood Boards - Visual Timeline Creator",
@@ -15,7 +16,9 @@ export default function RootLayout({
     <html lang="de">
       <body className="antialiased">
         <div className="fixed inset-0 -z-10 bg-gradient-to-br from-purple-900/20 via-blue-900/20 to-pink-900/20 animate-gradient" />
-        {children}
+        <ToastProviderWrapper>
+          {children}
+        </ToastProviderWrapper>
       </body>
     </html>
   );

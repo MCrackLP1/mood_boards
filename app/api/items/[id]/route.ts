@@ -23,28 +23,8 @@ export async function PATCH(
     }
 
     const body: UpdateItemInput = await request.json();
-    
-    console.log('PATCH request body:', body);
 
-    // Update with conditional fields
-    // We'll use a more straightforward approach with Vercel Postgres
-    const updates: string[] = [];
-    
-    if (body.content !== undefined) updates.push('content');
-    if (body.position_y !== undefined) updates.push('position_y');
-    if (body.position_x !== undefined) updates.push('position_x');
-    if (body.width !== undefined) updates.push('width');
-    if (body.height !== undefined) updates.push('height');
-    if (body.time !== undefined) updates.push('time');
-
-    if (updates.length === 0) {
-      return NextResponse.json(
-        { error: 'No fields to update' },
-        { status: 400 }
-      );
-    }
-
-    // Fetch current item
+    // Validate item exists first
     const currentResult = await sql<TimelineItem>`
       SELECT * FROM timeline_items WHERE id = ${itemId}
     `;
@@ -58,13 +38,118 @@ export async function PATCH(
 
     const currentItem = currentResult.rows[0];
 
-    // Merge updates with current values
-    const updatedContent = body.content ?? currentItem.content;
-    const updatedPositionY = body.position_y ?? currentItem.position_y;
-    const updatedPositionX = body.position_x ?? currentItem.position_x;
-    const updatedWidth = body.width ?? currentItem.width;
-    const updatedHeight = body.height ?? currentItem.height;
-    const updatedTime = body.time !== undefined ? body.time : currentItem.time;
+    // Check if any fields are provided to update
+    const hasUpdates = body.content !== undefined || 
+                       body.position_y !== undefined || 
+                       body.position_x !== undefined || 
+                       body.width !== undefined || 
+                       body.height !== undefined || 
+                       body.time !== undefined;
+
+    if (!hasUpdates) {
+      return NextResponse.json(
+        { error: 'No fields to update' },
+        { status: 400 }
+      );
+    }
+
+    // Validate content if provided
+    let updatedContent = currentItem.content;
+    if (body.content !== undefined) {
+      if (typeof body.content !== 'string') {
+        return NextResponse.json(
+          { error: 'content must be a string' },
+          { status: 400 }
+        );
+      }
+      const trimmedContent = body.content.trim();
+      if (trimmedContent === '') {
+        return NextResponse.json(
+          { error: 'content cannot be empty' },
+          { status: 400 }
+        );
+      }
+      updatedContent = trimmedContent;
+    }
+
+    // Validate positions
+    let updatedPositionY = currentItem.position_y;
+    let updatedPositionX = currentItem.position_x;
+    if (body.position_y !== undefined) {
+      const posY = Number(body.position_y);
+      if (!Number.isFinite(posY)) {
+        return NextResponse.json(
+          { error: 'position_y must be a valid number' },
+          { status: 400 }
+        );
+      }
+      updatedPositionY = posY;
+    }
+    if (body.position_x !== undefined) {
+      const posX = Number(body.position_x);
+      if (!Number.isFinite(posX)) {
+        return NextResponse.json(
+          { error: 'position_x must be a valid number' },
+          { status: 400 }
+        );
+      }
+      updatedPositionX = posX;
+    }
+
+    // Validate dimensions
+    let updatedWidth = currentItem.width;
+    let updatedHeight = currentItem.height;
+    if (body.width !== undefined) {
+      if (body.width === null) {
+        updatedWidth = null;
+      } else {
+        const width = Number(body.width);
+        if (!Number.isFinite(width) || width <= 0 || width > 10000) {
+          return NextResponse.json(
+            { error: 'width must be a positive number between 1 and 10000' },
+            { status: 400 }
+          );
+        }
+        updatedWidth = width;
+      }
+    }
+    if (body.height !== undefined) {
+      if (body.height === null) {
+        updatedHeight = null;
+      } else {
+        const height = Number(body.height);
+        if (!Number.isFinite(height) || height <= 0 || height > 10000) {
+          return NextResponse.json(
+            { error: 'height must be a positive number between 1 and 10000' },
+            { status: 400 }
+          );
+        }
+        updatedHeight = height;
+      }
+    }
+
+    // Validate time format
+    let updatedTime = currentItem.time;
+    if (body.time !== undefined) {
+      if (body.time === null || body.time === '') {
+        updatedTime = null;
+      } else {
+        if (typeof body.time !== 'string') {
+          return NextResponse.json(
+            { error: 'time must be a string in HH:MM format' },
+            { status: 400 }
+          );
+        }
+        const timeRegex = /^([0-1][0-9]|2[0-3]):[0-5][0-9]$/;
+        if (!timeRegex.test(body.time)) {
+          return NextResponse.json(
+            { error: 'time must be in HH:MM format (24-hour)' },
+            { status: 400 }
+          );
+        }
+        updatedTime = body.time;
+      }
+    }
 
     // Update with merged values
     const result = await sql<TimelineItem>`
@@ -79,8 +164,6 @@ export async function PATCH(
       WHERE id = ${itemId}
       RETURNING *
     `;
-
-    console.log('Update result:', result.rows[0]);
 
     return NextResponse.json({ item: result.rows[0] });
   } catch (error) {

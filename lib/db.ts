@@ -27,8 +27,6 @@ export async function initDatabase() {
         created_at TIMESTAMP DEFAULT NOW()
       )
     `;
-
-    console.log('Database tables created successfully');
   } catch (error) {
     console.error('Error creating database tables:', error);
     throw error;

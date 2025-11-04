@@ -1,8 +1,11 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { AnimatePresence } from 'framer-motion';
 import CanvasItem from './CanvasItem';
+import { useToast } from './Toast';
+import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts';
+import { optimizeImage } from '@/lib/imageOptimization';
 import type { TimelineItem as TimelineItemType } from '@/lib/types';
 
 interface CanvasProps {
@@ -14,6 +17,11 @@ interface CanvasProps {
 export default function Canvas({ boardId, items: initialItems, onItemsChange }: CanvasProps) {
   const [items, setItems] = useState(initialItems);
   const [isUploading, setIsUploading] = useState(false);
+  const [selectedItemId, setSelectedItemId] = useState<number | null>(null);
+  const { showToast } = useToast();
+  const pendingUpdatesRef = useRef<Map<number, { content?: string; position_x?: number; position_y?: number; width?: number; height?: number; time?: string }>>(new Map());
+  const updateTimersRef = useRef<Map<number, NodeJS.Timeout>>(new Map());
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Sync local state with props when items change - but preserve local position/size
   useEffect(() => {
@@ -45,7 +53,7 @@ export default function Canvas({ boardId, items: initialItems, onItemsChange }: 
     });
   }, [initialItems]);
 
-  const handleAddNote = async () => {
+  const handleAddNote = useCallback(async () => {
     try {
       // Add note at center of viewport
       const scrollX = window.scrollX || window.pageXOffset;
@@ -68,27 +76,36 @@ export default function Canvas({ boardId, items: initialItems, onItemsChange }: 
       });
 
       if (response.ok) {
+        showToast('Notiz erfolgreich hinzugefügt', 'success');
         onItemsChange();
       } else {
         const errorData = await response.json();
         console.error('Error adding note:', errorData);
-        alert('Fehler beim Hinzufügen der Notiz: ' + (errorData.error || 'Unbekannter Fehler'));
+        showToast('Fehler beim Hinzufügen der Notiz: ' + (errorData.error || 'Unbekannter Fehler'), 'error');
       }
     } catch (error) {
       console.error('Error adding note:', error);
-      alert('Netzwerkfehler beim Hinzufügen der Notiz');
+      showToast('Netzwerkfehler beim Hinzufügen der Notiz', 'error');
     }
-  };
+  }, [boardId, onItemsChange, showToast]);
 
-  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageUpload = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
     setIsUploading(true);
     try {
-      // Upload image
+      // Optimize image before upload
+      const optimizedFile = await optimizeImage(file, {
+        maxWidth: 1920,
+        maxHeight: 1920,
+        quality: 0.85,
+        maxSizeMB: 2,
+      });
+
+      // Upload optimized image
       const formData = new FormData();
-      formData.append('file', file);
+      formData.append('file', optimizedFile);
 
       const uploadResponse = await fetch('/api/upload', {
         method: 'POST',
@@ -98,7 +115,7 @@ export default function Canvas({ boardId, items: initialItems, onItemsChange }: 
       if (!uploadResponse.ok) {
         const errorData = await uploadResponse.json();
         console.error('Upload error:', errorData);
-        alert('Fehler beim Hochladen: ' + (errorData.error || 'Unbekannter Fehler'));
+        showToast('Fehler beim Hochladen: ' + (errorData.error || 'Unbekannter Fehler'), 'error');
         return;
       }
 
@@ -126,36 +143,25 @@ export default function Canvas({ boardId, items: initialItems, onItemsChange }: 
       });
 
       if (itemResponse.ok) {
+        showToast('Bild erfolgreich hochgeladen', 'success');
         onItemsChange();
       } else {
         const errorData = await itemResponse.json();
         console.error('Error creating item:', errorData);
-        alert('Fehler beim Erstellen des Items: ' + (errorData.error || 'Unbekannter Fehler'));
+        showToast('Fehler beim Erstellen des Items: ' + (errorData.error || 'Unbekannter Fehler'), 'error');
       }
     } catch (error) {
       console.error('Error uploading image:', error);
-      alert('Netzwerkfehler beim Hochladen des Bildes');
+      showToast('Netzwerkfehler beim Hochladen des Bildes', 'error');
     } finally {
       setIsUploading(false);
       // Reset the file input
       e.target.value = '';
     }
-  };
+  }, [boardId, onItemsChange, showToast]);
 
-  const handleUpdateItem = async (
-    id: number,
-    updates: { content?: string; position_x?: number; position_y?: number; width?: number; height?: number; time?: string }
-  ) => {
+  const flushUpdate = useCallback(async (id: number, updates: { content?: string; position_x?: number; position_y?: number; width?: number; height?: number; time?: string }) => {
     try {
-      console.log('Updating item:', { id, updates });
-      
-      // Optimistic update
-      setItems((prevItems) =>
-        prevItems.map((item) =>
-          item.id === id ? { ...item, ...updates } : item
-        )
-      );
-
       const response = await fetch(`/api/items/${id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
@@ -170,8 +176,7 @@ export default function Canvas({ boardId, items: initialItems, onItemsChange }: 
         return;
       }
 
-      const result = await response.json();
-      console.log('Update successful:', result);
+      await response.json();
 
       // Only refetch if content or time changed
       // For position/size, keep optimistic update to avoid flickering
@@ -186,18 +191,114 @@ export default function Canvas({ boardId, items: initialItems, onItemsChange }: 
       // Revert on error
       onItemsChange();
     }
-  };
+  }, [onItemsChange]);
 
-  const handleDeleteItem = async (id: number) => {
+  const handleUpdateItem = useCallback((
+    id: number,
+    updates: { content?: string; position_x?: number; position_y?: number; width?: number; height?: number; time?: string }
+  ) => {
+    // Always do optimistic update immediately
+    setItems((prevItems) =>
+      prevItems.map((item) =>
+        item.id === id ? { ...item, ...updates } : item
+      )
+    );
+
+    // Merge with pending updates
+    const existingPending = pendingUpdatesRef.current.get(id) || {};
+    const mergedUpdates = {
+      ...existingPending,
+      ...updates,
+    };
+    pendingUpdatesRef.current.set(id, mergedUpdates);
+
+    // Clear existing timer for this item
+    const existingTimer = updateTimersRef.current.get(id);
+    if (existingTimer) {
+      clearTimeout(existingTimer);
+    }
+
+    // Determine debounce delay: immediate for content/time, debounced for position/size
+    const isPositionUpdate = updates.position_x !== undefined || updates.position_y !== undefined || updates.width !== undefined || updates.height !== undefined;
+    const isContentUpdate = updates.content !== undefined || updates.time !== undefined;
+    
+    const delay = isContentUpdate ? 0 : (isPositionUpdate ? 300 : 0);
+
+    if (delay === 0) {
+      // Immediate update for content/time
+      flushUpdate(id, mergedUpdates);
+      pendingUpdatesRef.current.delete(id);
+    } else {
+      // Debounced update for position/size
+      const timer = setTimeout(() => {
+        const finalUpdates = pendingUpdatesRef.current.get(id);
+        if (finalUpdates) {
+          flushUpdate(id, finalUpdates);
+          pendingUpdatesRef.current.delete(id);
+          updateTimersRef.current.delete(id);
+        }
+      }, delay);
+      updateTimersRef.current.set(id, timer);
+    }
+  }, [flushUpdate]);
+
+  const handleDeleteItem = useCallback(async (id: number) => {
     try {
-      await fetch(`/api/items/${id}`, {
+      const response = await fetch(`/api/items/${id}`, {
         method: 'DELETE',
       });
-      onItemsChange();
+      if (response.ok) {
+        showToast('Item erfolgreich gelöscht', 'success');
+        onItemsChange();
+      } else {
+        const errorData = await response.json();
+        showToast('Fehler beim Löschen: ' + (errorData.error || 'Unbekannter Fehler'), 'error');
+      }
     } catch (error) {
       console.error('Error deleting item:', error);
+      showToast('Netzwerkfehler beim Löschen des Items', 'error');
     }
-  };
+  }, [onItemsChange, showToast]);
+
+  // Keyboard shortcuts - defined after handlers
+  useKeyboardShortcuts([
+    {
+      key: 'n',
+      ctrl: true,
+      handler: handleAddNote,
+    },
+    {
+      key: 'i',
+      ctrl: true,
+      handler: () => {
+        fileInputRef.current?.click();
+      },
+    },
+    {
+      key: 'Delete',
+      handler: () => {
+        if (selectedItemId !== null) {
+          handleDeleteItem(selectedItemId);
+          setSelectedItemId(null);
+        }
+      },
+    },
+    {
+      key: 'Backspace',
+      handler: () => {
+        if (selectedItemId !== null) {
+          handleDeleteItem(selectedItemId);
+          setSelectedItemId(null);
+        }
+      },
+    },
+    {
+      key: 'Escape',
+      handler: () => {
+        setSelectedItemId(null);
+      },
+    },
+  ]);
 
   return (
     <div className="relative w-full min-h-screen">
@@ -222,6 +323,8 @@ export default function Canvas({ boardId, items: initialItems, onItemsChange }: 
               item={item}
               onUpdate={handleUpdateItem}
               onDelete={handleDeleteItem}
+              isSelected={selectedItemId === item.id}
+              onSelect={() => setSelectedItemId(item.id)}
             />
           ))}
         </AnimatePresence>
@@ -245,7 +348,7 @@ export default function Canvas({ boardId, items: initialItems, onItemsChange }: 
         <button
           onClick={handleAddNote}
           className="w-14 h-14 rounded-full bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-lg shadow-purple-500/50 flex items-center justify-center hover:shadow-2xl hover:shadow-purple-500/60 transition-all hover:scale-110 active:scale-95"
-          title="Notiz hinzufügen"
+          title="Notiz hinzufügen (Ctrl+N)"
         >
           <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
@@ -254,9 +357,10 @@ export default function Canvas({ boardId, items: initialItems, onItemsChange }: 
 
         <label
           className="w-14 h-14 rounded-full bg-gradient-to-r from-blue-500 to-cyan-500 text-white shadow-lg shadow-blue-500/50 flex items-center justify-center hover:shadow-2xl hover:shadow-blue-500/60 transition-all cursor-pointer hover:scale-110 active:scale-95"
-          title="Bild hinzufügen"
+          title="Bild hinzufügen (Ctrl+I)"
         >
           <input
+            ref={fileInputRef}
             type="file"
             accept="image/*"
             onChange={handleImageUpload}

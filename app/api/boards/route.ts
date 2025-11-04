@@ -25,16 +25,32 @@ export async function POST(request: NextRequest) {
   try {
     const body: CreateBoardInput = await request.json();
     
-    if (!body.title || body.title.trim() === '') {
+    // Validate title
+    if (!body.title || typeof body.title !== 'string') {
       return NextResponse.json(
-        { error: 'Title is required' },
+        { error: 'Title is required and must be a string' },
+        { status: 400 }
+      );
+    }
+
+    const trimmedTitle = body.title.trim();
+    if (trimmedTitle === '') {
+      return NextResponse.json(
+        { error: 'Title cannot be empty' },
+        { status: 400 }
+      );
+    }
+
+    if (trimmedTitle.length > 255) {
+      return NextResponse.json(
+        { error: 'Title must be 255 characters or less' },
         { status: 400 }
       );
     }
 
     const result = await sql<Board>`
       INSERT INTO boards (title)
-      VALUES (${body.title})
+      VALUES (${trimmedTitle})
       RETURNING *
     `;
 

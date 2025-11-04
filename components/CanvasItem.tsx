@@ -9,11 +9,13 @@ interface CanvasItemProps {
   item: TimelineItemType;
   onUpdate: (id: number, updates: { content?: string; position_x?: number; position_y?: number; width?: number; height?: number; time?: string }) => void;
   onDelete: (id: number) => void;
+  isSelected?: boolean;
+  onSelect?: () => void;
 }
 
 type ResizeHandle = 'se' | 'sw' | 'ne' | 'nw' | 'e' | 'w' | 'n' | 's' | null;
 
-export default function CanvasItem({ item, onUpdate, onDelete }: CanvasItemProps) {
+export default function CanvasItem({ item, onUpdate, onDelete, isSelected = false, onSelect }: CanvasItemProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [editContent, setEditContent] = useState(item.content);
   const [editTime, setEditTime] = useState(item.time || '');
@@ -61,6 +63,11 @@ export default function CanvasItem({ item, onUpdate, onDelete }: CanvasItemProps
   }, [item.width, item.height, isResizing, isDragging, dimensions.width, dimensions.height]);
 
   const handleMouseDown = (e: React.MouseEvent) => {
+    // Select item on click (if not editing and not dragging)
+    if (!isEditing && onSelect && !e.shiftKey) {
+      onSelect();
+    }
+
     if (isEditing || !e.shiftKey) {
       // Without Shift: open editing
       if (!e.shiftKey && !isEditing && item.type === 'note') {
@@ -96,118 +103,112 @@ export default function CanvasItem({ item, onUpdate, onDelete }: CanvasItemProps
     };
   };
 
-  const handleMouseMove = (e: MouseEvent) => {
-    if (isDragging && dragRef.current) {
-      const deltaX = e.clientX - dragRef.current.startX;
-      const deltaY = e.clientY - dragRef.current.startY;
+  useEffect(() => {
+    if (!isDragging && !isResizing) {
+      return;
+    }
 
-      const newX = dragRef.current.initialX + deltaX;
-      const newY = dragRef.current.initialY + deltaY;
+    const handleMouseMove = (e: MouseEvent) => {
+      if (isDragging && dragRef.current) {
+        const deltaX = e.clientX - dragRef.current.startX;
+        const deltaY = e.clientY - dragRef.current.startY;
 
-      onUpdate(item.id, { position_x: newX, position_y: newY });
-    } else if (isResizing && resizeRef.current && resizeHandle) {
-      const deltaX = e.clientX - resizeRef.current.startX;
-      const deltaY = e.clientY - resizeRef.current.startY;
+        const newX = dragRef.current.initialX + deltaX;
+        const newY = dragRef.current.initialY + deltaY;
 
-      let newWidth = resizeRef.current.initialWidth;
-      let newHeight = resizeRef.current.initialHeight;
-      let newX = item.position_x;
-      let newY = item.position_y;
+        onUpdate(item.id, { position_x: newX, position_y: newY });
+      } else if (isResizing && resizeRef.current && resizeHandle) {
+        const deltaX = e.clientX - resizeRef.current.startX;
+        const deltaY = e.clientY - resizeRef.current.startY;
 
-      // Calculate new dimensions based on resize handle
-      switch (resizeHandle) {
-        case 'se': // Bottom-right
-          newWidth = Math.max(100, resizeRef.current.initialWidth + deltaX);
-          newHeight = Math.max(50, resizeRef.current.initialHeight + deltaY);
-          break;
-        case 'sw': // Bottom-left
-          newWidth = Math.max(100, resizeRef.current.initialWidth - deltaX);
-          newHeight = Math.max(50, resizeRef.current.initialHeight + deltaY);
-          newX = resizeRef.current.initialLeft + deltaX;
-          break;
-        case 'ne': // Top-right
-          newWidth = Math.max(100, resizeRef.current.initialWidth + deltaX);
-          newHeight = Math.max(50, resizeRef.current.initialHeight - deltaY);
-          newY = resizeRef.current.initialTop + deltaY;
-          break;
-        case 'nw': // Top-left
-          newWidth = Math.max(100, resizeRef.current.initialWidth - deltaX);
-          newHeight = Math.max(50, resizeRef.current.initialHeight - deltaY);
-          newX = resizeRef.current.initialLeft + deltaX;
-          newY = resizeRef.current.initialTop + deltaY;
-          break;
-        case 'e': // Right
-          newWidth = Math.max(100, resizeRef.current.initialWidth + deltaX);
-          break;
-        case 'w': // Left
-          newWidth = Math.max(100, resizeRef.current.initialWidth - deltaX);
-          newX = resizeRef.current.initialLeft + deltaX;
-          break;
-        case 'n': // Top
-          newHeight = Math.max(50, resizeRef.current.initialHeight - deltaY);
-          newY = resizeRef.current.initialTop + deltaY;
-          break;
-        case 's': // Bottom
-          newHeight = Math.max(50, resizeRef.current.initialHeight + deltaY);
-          break;
-      }
+        let newWidth = resizeRef.current.initialWidth;
+        let newHeight = resizeRef.current.initialHeight;
+        let newX = item.position_x;
+        let newY = item.position_y;
 
-      // For images, maintain aspect ratio if available
-      if (item.type === 'image' && imageAspectRatio) {
-        if (resizeHandle.includes('e') || resizeHandle.includes('w')) {
-          newHeight = newWidth / imageAspectRatio;
-        } else if (resizeHandle.includes('n') || resizeHandle.includes('s')) {
-          newWidth = newHeight * imageAspectRatio;
+        // Calculate new dimensions based on resize handle
+        switch (resizeHandle) {
+          case 'se': // Bottom-right
+            newWidth = Math.max(100, resizeRef.current.initialWidth + deltaX);
+            newHeight = Math.max(50, resizeRef.current.initialHeight + deltaY);
+            break;
+          case 'sw': // Bottom-left
+            newWidth = Math.max(100, resizeRef.current.initialWidth - deltaX);
+            newHeight = Math.max(50, resizeRef.current.initialHeight + deltaY);
+            newX = resizeRef.current.initialLeft + deltaX;
+            break;
+          case 'ne': // Top-right
+            newWidth = Math.max(100, resizeRef.current.initialWidth + deltaX);
+            newHeight = Math.max(50, resizeRef.current.initialHeight - deltaY);
+            newY = resizeRef.current.initialTop + deltaY;
+            break;
+          case 'nw': // Top-left
+            newWidth = Math.max(100, resizeRef.current.initialWidth - deltaX);
+            newHeight = Math.max(50, resizeRef.current.initialHeight - deltaY);
+            newX = resizeRef.current.initialLeft + deltaX;
+            newY = resizeRef.current.initialTop + deltaY;
+            break;
+          case 'e': // Right
+            newWidth = Math.max(100, resizeRef.current.initialWidth + deltaX);
+            break;
+          case 'w': // Left
+            newWidth = Math.max(100, resizeRef.current.initialWidth - deltaX);
+            newX = resizeRef.current.initialLeft + deltaX;
+            break;
+          case 'n': // Top
+            newHeight = Math.max(50, resizeRef.current.initialHeight - deltaY);
+            newY = resizeRef.current.initialTop + deltaY;
+            break;
+          case 's': // Bottom
+            newHeight = Math.max(50, resizeRef.current.initialHeight + deltaY);
+            break;
+        }
+
+        // For images, maintain aspect ratio if available
+        if (item.type === 'image' && imageAspectRatio) {
+          if (resizeHandle.includes('e') || resizeHandle.includes('w')) {
+            newHeight = newWidth / imageAspectRatio;
+          } else if (resizeHandle.includes('n') || resizeHandle.includes('s')) {
+            newWidth = newHeight * imageAspectRatio;
+          }
+        }
+
+        setDimensions({ width: newWidth, height: newHeight });
+        if (newX !== item.position_x || newY !== item.position_y) {
+          onUpdate(item.id, { position_x: newX, position_y: newY });
         }
       }
+    };
 
-      setDimensions({ width: newWidth, height: newHeight });
-      if (newX !== item.position_x || newY !== item.position_y) {
-        onUpdate(item.id, { position_x: newX, position_y: newY });
+    const handleMouseUp = () => {
+      if (isDragging) {
+        setIsDragging(false);
+        dragRef.current = null;
       }
-    }
-  };
+      if (isResizing) {
+        const finalWidth = Math.round(dimensions.width);
+        const finalHeight = Math.round(dimensions.height);
+        
+        setIsResizing(false);
+        setResizeHandle(null);
+        resizeRef.current = null;
+        
+        // Save final dimensions with rounded values
+        onUpdate(item.id, { 
+          width: finalWidth, 
+          height: finalHeight 
+        });
+      }
+    };
 
-  const handleMouseUp = () => {
-    if (isDragging) {
-      setIsDragging(false);
-      dragRef.current = null;
-    }
-    if (isResizing) {
-      const finalWidth = Math.round(dimensions.width);
-      const finalHeight = Math.round(dimensions.height);
-      
-      console.log('Resize completed:', { 
-        itemId: item.id, 
-        finalWidth, 
-        finalHeight,
-        previousWidth: item.width,
-        previousHeight: item.height
-      });
-      
-      setIsResizing(false);
-      setResizeHandle(null);
-      resizeRef.current = null;
-      
-      // Save final dimensions with rounded values
-      onUpdate(item.id, { 
-        width: finalWidth, 
-        height: finalHeight 
-      });
-    }
-  };
-
-  useEffect(() => {
-    if (isDragging || isResizing) {
-      window.addEventListener('mousemove', handleMouseMove);
-      window.addEventListener('mouseup', handleMouseUp);
-      return () => {
-        window.removeEventListener('mousemove', handleMouseMove);
-        window.removeEventListener('mouseup', handleMouseUp);
-      };
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isDragging, isResizing]);
+    window.addEventListener('mousemove', handleMouseMove);
+    window.addEventListener('mouseup', handleMouseUp);
+    
+    return () => {
+      window.removeEventListener('mousemove', handleMouseMove);
+      window.removeEventListener('mouseup', handleMouseUp);
+    };
+  }, [isDragging, isResizing, resizeHandle, imageAspectRatio, item.id, item.position_x, item.position_y, item.type, dimensions.width, dimensions.height, onUpdate]);
 
   const handleSave = () => {
     const updates: { content?: string; time?: string } = {};
@@ -248,7 +249,7 @@ export default function CanvasItem({ item, onUpdate, onDelete }: CanvasItemProps
       className="group"
       onMouseDown={handleMouseDown}
     >
-      <div className={`h-full glass-strong rounded-2xl p-4 shadow-xl transition-all duration-300 ${isDragging || isResizing ? 'scale-105 shadow-2xl shadow-purple-500/30' : ''}`}>
+      <div className={`h-full glass-strong rounded-2xl p-4 shadow-xl transition-all duration-300 ${isDragging || isResizing ? 'scale-105 shadow-2xl shadow-purple-500/30' : ''} ${isSelected ? 'ring-2 ring-purple-500 ring-offset-2 ring-offset-transparent' : ''}`}>
         {/* Delete button */}
         <button
           onClick={(e) => {
